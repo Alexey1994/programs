@@ -1,0 +1,1 @@
+@cls && "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe" main.cs -r:System.Speech.dll && cls && main || pause

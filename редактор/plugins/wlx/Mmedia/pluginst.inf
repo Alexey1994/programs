@@ -1,0 +1,5 @@
+[plugininstall]
+description=Multimedia Viewer Ver 2.62 - x32 - ANSI Dynamic library
+type=wlx
+file=mmedia.wlx
+defaultdir=mmedia

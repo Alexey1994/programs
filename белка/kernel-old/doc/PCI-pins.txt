@@ -1,0 +1,52 @@
+                    Rear of Computer
+                    :------:------:
+           Reserved |- B14   A14 -| Reserved
+             Ground |- B15   A15 -| Reset
+              Clock |- B16   A16 -| +V I/O
+             Ground |- B17   A17 -| Grant
+            Request |- B18   A18 -| Ground
+             +V I/O |- B19   A19 -| Reserved
+         Address 31 |- B20   A20 -| Address 30
+         Address 29 |- B21   A21 -| +3.3V
+             Ground |- B22   A22 -| Address 28
+         Address 27 |- B23   A23 -| Address 26
+         Address 25 |- B24   A24 -| Ground
+              +3.3V |- B25   A25 -| Address 24
+             C/BE 3 |- B26   A26 -| Init Device Select
+         Address 23 |- B27   A27 -| +3.3V
+             Ground |- B28   A28 -| Address 22
+         Address 21 |- B29   A29 -| Address 20
+         Address 19 |- B30   A30 -| Ground
+              +3.3V |- B31   A31 -| Address 18
+         Address 17 |- B32   A32 -| Address 16
+             C/BE 2 |- B33   A33 -| +3.3V
+             Ground |- B34   A34 -| Cycle Frame
+    Initiator Ready |- B35   A35 -| Ground
+              +3.3V |- B36   A36 -| Target Ready
+      Device Select |- B37   A37 -| Ground
+             Ground |- B38   A38 -| Stop
+               Lock |- B39   A39 -| +3.3V
+       Parity Error |- B40   A40 -| Snoop Done
+              +3.3V |- B41   A41 -| Snoop Backoff
+       System Error |- B42   A42 -| Ground
+              +3.3V |- B43   A43 -| PAR
+             C/BE 1 |- B44   A44 -| Address 15
+         Address 14 |- B45   A45 -| +3.3V
+       M66EN/Ground |- B46   A46 -| Address 13
+         Address 12 |- B47   A47 -| Address 11
+         Address 10 |- B48   A48 -| Ground
+             Ground |- B49   A49 -| Address 9
+                    :------:------:
+                    :------:------:
+          Address 8 |- B52   A52 -| C/BE 0
+          Address 7 |- B53   A53 -| +3.3V
+              +3.3V |- B54   A54 -| Address 6
+          Address 5 |- B55   A55 -| Address 4
+          Address 3 |- B56   A56 -| Ground
+             Ground |- B57   A57 -| Address 2
+          Address 1 |- B58   A58 -| Address 0
+             +5 I/O |- B59   A59 -| +V I/O
+ Acknowledge 64-bit |- B60   A60 -| Request 64-bit
+                +5V |- B61   A61 -| +5V
+                +5V |- B62   A62 -| +5V
+                    :------:------:

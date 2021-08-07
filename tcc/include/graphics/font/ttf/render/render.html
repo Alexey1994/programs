@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<meta charset="utf8">
+
+	<style>
+		html, body {
+			margin: 0;
+			padding: 0;
+		}
+
+		@font-face {
+			font-family: 'Droid Sans Mono';
+			src: url('шрифты/DroidSansMono.ttf');
+		}
+	</style>
+</head>
+<body>
+	<script>
+		
+		
+		function rasterizeCharacter(character)
+		{
+			var height = 15
+
+			var canvas = document.createElement('canvas')
+			canvas.width = 50
+			canvas.height = height + 4
+			document.body.appendChild(canvas)
+
+			var canvasContext = canvas.getContext('2d')
+			canvasContext.imageSmoothingEnabled = false
+			canvasContext.font = height + 'px Droid Sans Mono'
+
+			var width = canvasContext.measureText(character).width
+			//canvasContext.fillStyle = '#FFFFFF'
+			//canvasContext.fillRect(0, 0, 1024, 768)
+			//canvasContext.fillStyle = '#000000'
+			canvasContext.fillText(character, 0, height)
+			var image = canvasContext.getImageData(0, 0, width, height + 4)
+			var imageData = Array.from(image.data)
+
+			var targetImageData = []
+			for(var i = 0; i < imageData.length / 4; ++i)
+				targetImageData.push(imageData[i * 4 + 3])
+			
+			console.log(character, JSON.stringify(targetImageData))
+		}
+
+		rasterizeCharacter('А')
+		rasterizeCharacter('Б')
+		rasterizeCharacter('В')
+		rasterizeCharacter('Г')
+		rasterizeCharacter('Д')
+		rasterizeCharacter('Е')
+		rasterizeCharacter('Ё')
+		rasterizeCharacter('Ж')
+		rasterizeCharacter('З')
+		rasterizeCharacter('И')
+		rasterizeCharacter('Й')
+		rasterizeCharacter('К')
+		rasterizeCharacter('Л')
+		rasterizeCharacter('М')
+		rasterizeCharacter('Н')
+		rasterizeCharacter('О')
+		rasterizeCharacter('П')
+		rasterizeCharacter('Р')
+		rasterizeCharacter('С')
+		rasterizeCharacter('Т')
+		rasterizeCharacter('У')
+		rasterizeCharacter('Ф')
+		rasterizeCharacter('Х')
+		rasterizeCharacter('Ц')
+		rasterizeCharacter('Ч')
+		rasterizeCharacter('Ш')
+		rasterizeCharacter('Щ')
+		rasterizeCharacter('Ь')
+		rasterizeCharacter('Ы')
+		rasterizeCharacter('Ъ')
+		rasterizeCharacter('Э')
+		rasterizeCharacter('Ю')
+		rasterizeCharacter('Я')
+		rasterizeCharacter(' ')
+		rasterizeCharacter('<')
+		rasterizeCharacter('>')
+		rasterizeCharacter('0')
+		rasterizeCharacter('1')
+		rasterizeCharacter('2')
+		rasterizeCharacter('3')
+		rasterizeCharacter('4')
+		rasterizeCharacter('5')
+		rasterizeCharacter('6')
+		rasterizeCharacter('7')
+		rasterizeCharacter('8')
+		rasterizeCharacter('9')
+
+		//console.log(canvasContext)
+	</script>
+</body>
+</html>

@@ -12,6 +12,8 @@ main_class = window_class({
 	background = rgb(255, 255, 255)
 })
 
+y = 0
+
 main_window = window({
 	class  =  main_class,
 	name   = 'Редактор',
@@ -19,6 +21,15 @@ main_window = window({
 	y      = 0,
 	width  = 430,
 	height = 430,
+
+	on_paint = function(paint)
+		--print('repaint')
+	end,
+
+	on_left_mouse_button_up = function()
+		y = y - 100
+		main_window:scroll(0, y, 0, 100, 100, 100)
+	end,
 
 	on_destroy = function()
 		exit(0)
@@ -28,7 +39,12 @@ main_window = window({
 
 drive_class = window_class({
 	name       = 'drive',
-	background = rgb(128, 128, 128)
+	background = rgb(196, 196, 196)
+})
+
+active_drive_class = window_class({
+	name       = 'active-drive',
+	background = rgb(232, 232, 232)
 })
 
 function draw_drive(index, name)
@@ -39,13 +55,14 @@ function draw_drive(index, name)
 		x      = 10 + (index - 1) * 50,
 		y      = 10,
 		width  = 40,
-		height = 20,
+		height = 30,
 
 		on_paint = function(paint)
-			paint:text(%name, default_font, 0, 0, 40, 25)
+			paint:text(%name, default_font, 8, 4, 40, 25)
 		end,
 
 		on_left_mouse_button_up = function()
+			drives_view[%index].class = active_drive_class
 			current_path = %name
 			draw_files(current_path .. '\\*')
 		end
@@ -55,21 +72,21 @@ end
 
 file_class = window_class({
 	name       = 'file',
-	background = rgb(196, 196, 196)
+	background = rgb(232, 232, 232)
 })
 
 function draw_file(index, file)
-	return window({
+	local w = window({
 		parent = main_window,
 		class  = file_class,
 		name   = 'Файл',
 		x      = 10,
-		y      = 10 + 30 + (index - 1) * 22,
+		y      = 10 + 32 + (index - 1) * 33,
 		width  = 400,
-		height = 20,
+		height = 32,
 
 		on_paint = function(paint)
-			paint:text(%file.name, default_font, 0, 0, 400, 25)
+			paint:text(%file.name, default_font, 8, 4, 400, 25)
 		end,
 
 		on_left_mouse_button_up = function()
@@ -77,10 +94,12 @@ function draw_file(index, file)
 				current_path = current_path .. '\\' .. %file.name
 				draw_files(current_path .. '\\*')
 			else
-				execute('/C "' .. current_path .. '\\' .. %file.name .. '"')
+				execute('cmd /C ""' .. current_path .. '\\' .. %file.name .. '""')
 			end
 		end
 	})
+
+	return w
 end
 
 
@@ -113,3 +132,6 @@ draw_files(current_path .. '\\*')
 
 
 main_window:show()
+--main_window:repaint()
+
+print(1)

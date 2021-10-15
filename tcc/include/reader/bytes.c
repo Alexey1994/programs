@@ -27,12 +27,6 @@ static Number read_bytes_from_null_terminated_bytes_source(Byte** null_terminate
 }
 
 
-static Boolean end_of_null_terminated_bytes_source_data(Byte** null_terminated_bytes_source)
-{
-	return !**null_terminated_bytes_source;
-}
-
-
 void initialize_null_terminated_bytes_reader(Reader* reader, Byte* null_terminated_bytes)
 {
 	Byte** null_terminated_bytes_source;
@@ -41,7 +35,6 @@ void initialize_null_terminated_bytes_reader(Reader* reader, Byte* null_terminat
 	*null_terminated_bytes_source = null_terminated_bytes;
 	
 	initialize_reader(reader, null_terminated_bytes_source, &read_bytes_from_null_terminated_bytes_source);
-	reader->end_of_data = &end_of_null_terminated_bytes_source_data;
 	reader->close_source = &free_memory;
 }
 

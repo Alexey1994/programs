@@ -3,6 +3,7 @@
 
 
 #include <types.c>
+#include <system/memory.c>
 
 
 Number32 read_next_UTF_8_character_from_string(Number8** string)
@@ -52,14 +53,39 @@ error:
 
 void write_UTF8_character(Number32 character, Byte** string)
 {
-	if(character < 0b1111111)
+	if(character < 0x80)
 	{
 		**string = character;
 		++*string;
 	}
-	else if(character < 0x7FF)
+	else if(character < 0x800)
 	{
 		**string = 0b11000000 | ((character >> 6) & 0b00011111);
+		++*string;
+
+		**string = 0b10000000 | ((character) & 0b00111111);
+		++*string;
+	}
+	else if(character < 0x10000)
+	{
+		**string = 0b11100000 | ((character >> 12) & 0b00001111);
+		++*string;
+
+		**string = 0b10000000 | ((character >> 6) & 0b00111111);
+		++*string;
+
+		**string = 0b10000000 | ((character) & 0b00111111);
+		++*string;
+	}
+	else if(character < 0x11000)
+	{
+		**string = 0b11110000 | ((character >> 15) & 0b00000111);
+		++*string;
+
+		**string = 0b10000000 | ((character >> 12) & 0b00111111);
+		++*string;
+
+		**string = 0b10000000 | ((character >> 6) & 0b00111111);
 		++*string;
 
 		**string = 0b10000000 | ((character) & 0b00111111);
@@ -135,6 +161,54 @@ Integer_Number compare_long_strings(Number16* string1, Number number_of_characte
 	}
 	else
 		return 0;
+}
+
+
+Number16* convert_utf8_to_unicode(Byte* utf8)
+{
+	Number    size;
+	Number    index;
+	Number16* unicode;
+
+	for(size = 0; utf8[size]; ++size);
+	++size;
+
+	unicode = allocate_memory(size * sizeof(Number16));
+
+	for(index = 0; ; ++index)
+	{
+		unicode[index] = read_next_UTF_8_character_from_string(&utf8);
+
+		if(!unicode[index])
+			break;
+	}
+
+	return unicode;
+}
+
+
+Byte* convert_unicode_to_utf8(Number16* unicode)
+{
+	Number size;
+	Number index;
+	Byte*  utf8;
+	Byte*  utf8_ref;
+
+	for(size = 0; unicode[size]; ++size);
+	++size;
+
+	utf8 = allocate_memory(size * 4);
+	utf8_ref = utf8;
+
+	for(index = 0; ; ++index)
+	{
+		write_UTF8_character(unicode[index], &utf8_ref);
+
+		if(!unicode[index])
+			break;
+	}
+
+	return utf8;
 }
 
 

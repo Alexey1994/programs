@@ -51,6 +51,7 @@ void calculate_number_of_files()
 
 
 Number16** old_names;
+Number16** names_with_prefix;
 Number16** names;
 
 void set_number(Number16* name, Number number)
@@ -96,7 +97,8 @@ void generate_random_names()
 	for(i = 0; i < number_of_files; ++i)
 	{
 		name = allocate_memory(256 * sizeof(Number16));
-		set_number(name, i);
+		*name = '_';
+		set_number(name + 1, i);
 		names[i] = name;
 		//names_copy[i] = name;
 	}
@@ -199,6 +201,9 @@ void rename_files()
 	Number i;
 	for(i = 0; i < number_of_files; ++i)
 		MoveFileExW(old_names[i], names[i], MOVE_FILE_COPY_ALLOWED);
+
+	for(i = 0; i < number_of_files; ++i)
+		MoveFileExW(names[i], names[i] + 1, MOVE_FILE_COPY_ALLOWED);
 }
 
 

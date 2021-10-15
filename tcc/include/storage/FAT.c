@@ -143,7 +143,8 @@ void format_FAT12(File storage_file, Number64 storage_file_size)
 	sector[510] = 0x55;
 	sector[511] = 0xAA;
 
-	write_in_file(storage_file, 512, sector, 512);
+	set_file_position(storage_file, 512);
+	write_bytes_in_file(storage_file, sector, 512);
 
 
 	Byte* fat = sector;
@@ -153,7 +154,7 @@ void format_FAT12(File storage_file, Number64 storage_file_size)
 	fat[1] = 0xFF;
 	fat[2] = 0xFF;
 
-	write_in_file(storage_file, 2 * 512, sector, 512); //(fat12->number_of_hidden_sectors + fat12->number_of_reserved_sectors) * 512
+	write_bytes_in_file(storage_file, sector, 512); //(fat12->number_of_hidden_sectors + fat12->number_of_reserved_sectors) * 512
 
 
 	clear_bytes(sector, 512);
@@ -361,7 +362,8 @@ void format_FAT32(File storage_file, Number64 storage_file_size)
 	fs_info->number_of_free_clusters = 0xFFFFFFFF;
 	fs_info->next_free_cluster       = 0xFFFFFFFF;
 	fs_info->signature3              = 0xAA550000;
-	write_in_file(storage_file, 2 * 512, sector, 512);
+	set_file_position(storage_file, 2 * 512);
+	write_bytes_in_file(storage_file, sector, 512);
 
 
 	//clear_bytes(sector, 512);
@@ -376,7 +378,7 @@ void format_FAT32(File storage_file, Number64 storage_file_size)
 	fat[1] = 0x0FFFFFFF;
 	fat[2] = 0x0FFFFFFF;
 
-	write_in_file(storage_file, 3 * 512, sector, 512);
+	write_bytes_in_file(storage_file, sector, 512);
 
 
 	clear_bytes(sector, 512);
@@ -384,9 +386,9 @@ void format_FAT32(File storage_file, Number64 storage_file_size)
 
 	for(i = 0; i < number_of_sectors_in_FAT_table - 1; ++i)
 	//for(i = 0; i < 64; ++i)
-		write_in_file(storage_file, (4 + i) * 512, sector, 512);
+		write_bytes_in_file(storage_file, sector, 512);
 
-	write_in_file(storage_file, (3 + number_of_sectors_in_FAT_table) * 512, sector, 512);
+	write_bytes_in_file(storage_file, sector, 512);
 
 
 	clear_bytes(sector, 512);
@@ -424,7 +426,8 @@ void format_FAT32(File storage_file, Number64 storage_file_size)
 	sector[510] = 0x55;
 	sector[511] = 0xAA;
 
-	write_in_file(storage_file, 512, sector, 512);
+	set_file_position(storage_file, 512);
+	write_bytes_in_file(storage_file, sector, 512);
 }
 
 
@@ -448,13 +451,15 @@ FAT_File_System;
 
 void read_FAT_sector(FAT_File_System* file_system, Number32 cluster_number, Byte* sector, Number32 offset)
 {
-	read_from_file(file_system->storage_file, (file_system->data_start_sector + (cluster_number - 2) * file_system->sectors_in_cluster + offset) * 512, sector, 512);
+	set_file_position(file_system->storage_file, (file_system->data_start_sector + (cluster_number - 2) * file_system->sectors_in_cluster + offset) * 512);
+	read_bytes_from_file(file_system->storage_file, sector, 512);
 }
 
 
 void write_FAT_sector(FAT_File_System* file_system, Number32 cluster_number, Byte* sector, Number32 offset)
 {
-	write_in_file(file_system->storage_file, (file_system->data_start_sector + (cluster_number - 2) * file_system->sectors_in_cluster + offset) * 512, sector, 512);
+	set_file_position(file_system->storage_file, (file_system->data_start_sector + (cluster_number - 2) * file_system->sectors_in_cluster + offset) * 512);
+	write_bytes_in_file(file_system->storage_file, sector, 512);
 }
 
 
@@ -465,7 +470,8 @@ void open_FAT_File_System(FAT_File_System* file_system, File storage_file)
 
 	file_system->storage_file = storage_file;
 
-	read_from_file(storage_file, 512, sector, 512);
+	set_file_position(storage_file, 512);
+	read_bytes_from_file(storage_file, sector, 512);
 	fat32 = sector + 3;
 
 	file_system->FAT_start_sector          = fat32->number_of_hidden_sectors + fat32->number_of_reserved_sectors;
@@ -478,7 +484,8 @@ void open_FAT_File_System(FAT_File_System* file_system, File storage_file)
 	file_system->current_directory.cluster_number_high = fat32->root_directory_cluster >> 16;
 
 	file_system->current_FAT_sector        = 0;
-	read_from_file(file_system->storage_file, (file_system->FAT_start_sector + file_system->current_FAT_sector) * 512, file_system->FAT, 512);
+	set_file_position(file_system->storage_file, (file_system->FAT_start_sector + file_system->current_FAT_sector) * 512);
+	read_bytes_from_file(file_system->storage_file, file_system->FAT, 512);
 }
 
 
@@ -487,7 +494,8 @@ Number32 next_FAT_cluster(FAT_File_System* file_system, Number32 current_cluster
 	if(current_cluster / 128 != file_system->current_FAT_sector)
 	{
 		file_system->current_FAT_sector = current_cluster / 128;
-		read_from_file(file_system->storage_file, (file_system->FAT_start_sector + file_system->current_FAT_sector) * 512, file_system->FAT, 512);
+		set_file_position(file_system->storage_file, (file_system->FAT_start_sector + file_system->current_FAT_sector) * 512);
+		read_bytes_from_file(file_system->storage_file, file_system->FAT, 512);
 	}
 
 	return file_system->FAT[current_cluster % 128];
@@ -507,7 +515,8 @@ Number32 allocate_FAT_cluster(FAT_File_System* file_system)
 		++file_system->current_FAT_sector
 	)
 	{
-		read_from_file(file_system->storage_file, file_system->current_FAT_sector * 512, file_system->FAT, 512);
+		set_file_position(file_system->storage_file, file_system->current_FAT_sector * 512);
+		read_bytes_from_file(file_system->storage_file, file_system->FAT, 512);
 
 		for(i = 0; i < 128; ++i)
 		{
@@ -524,7 +533,8 @@ Number32 allocate_FAT_cluster(FAT_File_System* file_system)
 free_cluster_finded:
 
 	file_system->FAT[i] = 0x0FFFFFFF;
-	write_in_file(file_system->storage_file, file_system->current_FAT_sector * 512, file_system->FAT, 512);
+	set_file_position(file_system->storage_file, file_system->current_FAT_sector * 512);
+	write_bytes_in_file(file_system->storage_file, file_system->FAT, 512);
 	
 	return free_cluster;
 }
@@ -542,11 +552,13 @@ Number32 allocate_next_FAT_cluster(FAT_File_System* file_system, Number32 curren
 	if(current_cluster / 128 != file_system->current_FAT_sector)
 	{
 		file_system->current_FAT_sector = current_cluster / 128;
-		read_from_file(file_system->storage_file, (file_system->FAT_start_sector + file_system->current_FAT_sector) * 512, file_system->FAT, 512);
+		set_file_position(file_system->storage_file, (file_system->FAT_start_sector + file_system->current_FAT_sector) * 512);
+		read_bytes_from_file(file_system->storage_file, file_system->FAT, 512);
 	}
 
 	file_system->FAT[current_cluster % 128] = allocated_cluster;
-	write_in_file(file_system->storage_file, (file_system->FAT_start_sector + file_system->current_FAT_sector) * 512, file_system->FAT, 512);
+	set_file_position(file_system->storage_file, (file_system->FAT_start_sector + file_system->current_FAT_sector) * 512);
+	write_bytes_in_file(file_system->storage_file, file_system->FAT, 512);
 
 	return allocated_cluster;
 
@@ -558,7 +570,13 @@ error:
 void enum_FAT_data(
 	FAT_File_System* file_system,
 	Number32 data_cluster,
-	Boolean(*on_data)(FAT_File_System* file_system, FAT_Data* data, Number16* name, Number8 data_offset, Byte* context),
+	Boolean(*on_data)(
+		FAT_File_System* file_system,
+		FAT_Data* data,
+		Number16* name,
+		Number8 data_offset,
+		Byte* context
+	),
 	Byte* context
 )
 {

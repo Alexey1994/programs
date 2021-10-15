@@ -637,6 +637,7 @@ import Number32 RedrawWindow     (Byte* window, Windows_Rectangle* region, Byte*
 import Boolean  MoveWindow       (Byte* window, Integer_Number32 x, Integer_Number32 y, Integer_Number32 width, Integer_Number32 height, Boolean repaint);
 import Boolean  SetWindowTextW   (Byte* window, Number16* text);
 import Boolean  ScrollWindow     (Byte* window, Integer_Number32 x_amount, Integer_Number32 y_amount, Windows_Rectangle* rectangle, Windows_Rectangle* clip_rectangle);
+import Boolean  ShowScrollBar    (Byte* window, Number32 scrollbar_index, Boolean show);
 import Byte*    GetParent        (Byte* window);
 import Byte*    GetDC            (Byte* window);
 import Number32 SetWindowLongA   (Byte* window, Window_Field_Index field_index, Number32 value);

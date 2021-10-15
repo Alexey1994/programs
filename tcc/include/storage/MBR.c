@@ -54,7 +54,8 @@ void create_partition(File storage_file, Number64 storage_file_size)
 	sector[510] = 0x55;
 	sector[511] = 0xAA;
 
-	write_in_file(storage_file, 0, sector, 512);
+	set_file_position(storage_file, 0);
+	write_bytes_in_file(storage_file, sector, 512);
 }
 
 

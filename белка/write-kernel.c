@@ -3,7 +3,7 @@
 #include <storage/FAT.c>
 
 
-Boolean append_FAT_file(FAT_File_System* file_system, Number16* file_path, Number16* new_file_name)
+Boolean append_FAT_file(FAT_File_System* file_system, Byte* file_path, Number16* new_file_name)
 {
 	File    appended_file;
 	Number  appended_file_size;
@@ -12,14 +12,14 @@ Boolean append_FAT_file(FAT_File_System* file_system, Number16* file_path, Numbe
 	appended_file = open_file(file_path);
 	if(!appended_file)
 	{
-		log_error(_null_terminated_words, file_path, " not found");
+		log_error(file_path, " не найден");
 		goto error;
 	}
 
 	appended_file_size = get_file_size(appended_file);
 
 	Byte* appended_file_data = allocate_memory(appended_file_size);
-	read_from_file(appended_file, 0, appended_file_data, appended_file_size);
+	read_bytes_from_file(appended_file, appended_file_data, appended_file_size);
 	if(!create_FAT_file(file_system, new_file_name, appended_file_data, appended_file_size))
 		is_success = 0;
 	free_memory(appended_file_data);
@@ -40,7 +40,7 @@ Boolean append_FAT_files(File storage_file)
 		goto error;
 
 
-	if(!append_FAT_file(&file_system, L"kernel/bin/kernel", L"KERNEL"))
+	if(!append_FAT_file(&file_system, "bin/kernel", L"KERNEL"))
 		goto error;
 
 	if(!create_FAT_directory(&file_system, L"IFACES"))
@@ -49,9 +49,17 @@ Boolean append_FAT_files(File storage_file)
 	if(!open_FAT_directory(&file_system, L"IFACES"))
 		goto error;
 
-	if(!append_FAT_file(&file_system, L"PCI/bin/PCI", L"PCI"))
+
+	if(!append_FAT_file(&file_system, "bin/interfaces/console/out", L"CONSOLE"))
 		goto error;
 
+	
+	if(!append_FAT_file(&file_system, "bin/interfaces/video/out", L"VIDEO"))
+		goto error;
+
+
+	if(!append_FAT_file(&file_system, "bin/interfaces/PCI/out", L"PCI"))
+		goto error;
 
 	if(!open_FAT_File_System(&file_system, storage_file))
 		goto error;
@@ -62,75 +70,53 @@ Boolean append_FAT_files(File storage_file)
 	if(!open_FAT_directory(&file_system, L"PCI"))
 		goto error;
 
-	if(!append_FAT_file(&file_system, L"PCI/devices/10025046/bin/10025046", L"10025046"))
+	if(!append_FAT_file(&file_system, "bin/PCI/10025046/out", L"10025046"))
 		goto error;
 
-	if(!append_FAT_file(&file_system, L"PCI/devices/10222000/bin/10222000", L"10222000"))
+	if(!append_FAT_file(&file_system, "bin/PCI/10222000/out", L"10222000"))
 		goto error;
 
-	if(!append_FAT_file(&file_system, L"PCI/devices/10EC8168/bin/10EC8168", L"10EC8168"))
+	if(!append_FAT_file(&file_system, "bin/PCI/106B003F/out", L"106B003F"))
 		goto error;
 
-	if(!append_FAT_file(&file_system, L"PCI/devices/12341111/bin/12341111", L"12341111"))
+	if(!append_FAT_file(&file_system, "bin/PCI/10EC8168/out", L"10EC8168"))
 		goto error;
 
-	if(!append_FAT_file(&file_system, L"PCI/devices/13445410/bin/13445410", L"13445410"))
+	if(!append_FAT_file(&file_system, "bin/PCI/12341111/out", L"12341111"))
 		goto error;
 
-	if(!append_FAT_file(&file_system, L"PCI/devices/80862415/bin/80862415", L"80862415"))
+	if(!append_FAT_file(&file_system, "bin/PCI/13445410/out", L"13445410"))
 		goto error;
 
-	if(!append_FAT_file(&file_system, L"PCI/devices/8086280B/bin/8086280B", L"8086280B"))
+	if(!append_FAT_file(&file_system, "bin/PCI/80861E31/out", L"80861E31"))
 		goto error;
 
-	if(!append_FAT_file(&file_system, L"PCI/devices/80863EA0/bin/80863EA0", L"80863EA0"))
+	if(!append_FAT_file(&file_system, "bin/PCI/80862415/out", L"80862415"))
 		goto error;
 
-	if(!append_FAT_file(&file_system, L"PCI/devices/80867010/bin/80867010", L"80867010"))
+	if(!append_FAT_file(&file_system, "bin/PCI/8086280B/out", L"8086280B"))
 		goto error;
 
-	if(!append_FAT_file(&file_system, L"PCI/devices/80867111/bin/80867111", L"80867111"))
+	if(!append_FAT_file(&file_system, "bin/PCI/80863EA0/out", L"80863EA0"))
 		goto error;
 
-	if(!append_FAT_file(&file_system, L"PCI/devices/80869DD3/bin/80869DD3", L"80869DD3"))
+	if(!append_FAT_file(&file_system, "bin/PCI/80867010/out", L"80867010"))
 		goto error;
 
-	if(!append_FAT_file(&file_system, L"PCI/devices/80869DED/bin/80869DED", L"80869DED"))
+	if(!append_FAT_file(&file_system, "bin/PCI/80867111/out", L"80867111"))
 		goto error;
 
-	if(!append_FAT_file(&file_system, L"PCI/devices/80869DF0/bin/80869DF0", L"80869DF0"))
+	if(!append_FAT_file(&file_system, "bin/PCI/80869DD3/out", L"80869DD3"))
 		goto error;
 
-	if(!append_FAT_file(&file_system, L"PCI/devices/80869DF5/bin/80869DF5", L"80869DF5"))
-		goto error;
-/*
-	if(!append_FAT_file(&file_system, L"./doc/man.txt", L"GHBDTN"))
+	if(!append_FAT_file(&file_system, "bin/PCI/80869DED/out", L"80869DED"))
 		goto error;
 
-	if(!create_FAT_directory(&file_system, L"BYNTHATQCS"))//¨­â¥àä¥©áë
+	if(!append_FAT_file(&file_system, "bin/PCI/80869DF0/out", L"80869DF0"))
 		goto error;
 
-	if(!create_FAT_directory(&file_system, L"ECNHJQCNDF"))//ãáâà®©áâ¢ 
+	if(!append_FAT_file(&file_system, "bin/PCI/80869DF5/out", L"80869DF5"))
 		goto error;
-
-	if(!open_FAT_directory(&file_system, L"BYNTHATQCS"))
-		goto error;
-
-	if(!append_FAT_file(&file_system, L"./drivers/PCI", L"GRB"))//Šˆ, PCI
-		goto error;*/
-
-
-	//if(!append_FAT_file(&file_system, L"./drivers/OUT", L"USB"))
-	//	goto error;
-/*
-	if(!create_FAT_directory(&file_system, L"PCI"))
-		goto error;
-
-	if(!create_FAT_directory(&file_system, L"ACPI"))
-		goto error;
-
-	if(!create_FAT_directory(&file_system, L"USB"))
-		goto error;*/
 
 	return 1;
 
@@ -146,10 +132,10 @@ void create_storage()
 	Number i;
 
 	delete_file(L"VM/storage");
-	create_file(L"VM/storage", 0, 0);
-	storage_file = open_file(L"VM/storage");
+	create_file(L"VM/storage");
+	storage_file = open_file("VM/storage");
 	for(i = 0; i < 4096; ++i)
-		write_in_file(storage_file, i * 512, zeros, 512);
+		write_bytes_in_file(storage_file, zeros, 512);
 	close_file(storage_file);
 }
 
@@ -161,14 +147,14 @@ Number32 main()
 	File     storage_file;
 	Number64 storage_file_size;
 
-	storage_file = open_file(L"VM/storage");
+	storage_file = open_file("VM/storage");
 	if(!storage_file)
 	{
-		log_error("can't open \"VM/storage\" file");
+		log_error("отсутствует файл \"VM/storage\"");
 		return 1;
 	}
 	storage_file_size = get_file_size(storage_file);
-	print("storage size: ", _Number64_triplets, storage_file_size, " bytes");
+	print("размер VM/storage: ", _Number64_triplets, storage_file_size, " байт\n");
 
 	create_partition(storage_file, storage_file_size);
 	format_FAT32(storage_file, storage_file_size);

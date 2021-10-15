@@ -2,7 +2,10 @@ LIBRARY kernel32.dll
 
 EXPORTS
 
+CreateEventW
+
 DeviceIoControl
+WaitForSingleObject
 
 CreateDirectoryW
 RemoveDirectoryW
@@ -43,10 +46,13 @@ HeapReAlloc
 AddVectoredExceptionHandler
 
 CreateProcessW
+GetExitCodeProcess
+
 ShellExecuteW
 
 CreateThread
 Sleep
+SleepEx
 
 GetStdHandle
 SetConsoleTextAttribute
@@ -61,5 +67,6 @@ FormatMessageA
 
 
 WideCharToMultiByte
+MultiByteToWideChar
 
 GetTickCount

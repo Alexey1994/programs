@@ -9,9 +9,11 @@
 typedef enum
 {
 	OPERAND                 = 1,
-	UNARY_OPERATION         = 2,
-	POSTFIX_UNARY_OPERATION = 3,
-	BINARY_OPERATION        = 4
+	OPEN_BRACE              = 2,
+	CLOSE_BRACE             = 3,
+	UNARY_OPERATION         = 4,
+	POSTFIX_UNARY_OPERATION = 5,
+	BINARY_OPERATION        = 6
 }
 Expression_Node_Type;
 
@@ -94,7 +96,8 @@ Boolean parse_expression(
 					goto end_expression;
 
 				read_next_byte(reader);
-				add_operation_in_stack(&stack, 0, 0);
+				add_operation_in_stack(&stack, OPEN_BRACE, 0);
+				add_expression_node(expression, OPEN_BRACE, 0);
 				require_operand = 1;
 				break;
 
@@ -104,7 +107,7 @@ Boolean parse_expression(
 
 				read_next_byte(reader);
 
-				while(stack.size && get_operation_from_stack(&stack).type)
+				while(stack.size && get_operation_from_stack(&stack).type != OPEN_BRACE)
 				{
 					operation = remove_operation_from_stack(&stack);
 					add_expression_node(expression, operation.type, operation.data);
@@ -114,6 +117,7 @@ Boolean parse_expression(
 					goto error;
 
 				remove_operation_from_stack(&stack);
+				add_expression_node(expression, CLOSE_BRACE, 0);
 				require_operand = 0;
 				break;
 
@@ -149,7 +153,7 @@ Boolean parse_expression(
 						while(stack.size)
 						{
 							operation = get_operation_from_stack(&stack);
-							if(operation.type && ((Operation*)operation.data)->priority < postfix_unary_operation->priority)
+							if(operation.type != OPEN_BRACE && ((Operation*)operation.data)->priority <= postfix_unary_operation->priority)
 							{
 								operation = remove_operation_from_stack(&stack);
 								add_expression_node(expression, operation.type, operation.data);
@@ -170,7 +174,7 @@ Boolean parse_expression(
 						while(stack.size)
 						{
 							operation = get_operation_from_stack(&stack);
-							if(operation.type && ((Operation*)operation.data)->priority < binary_operation->priority)
+							if(operation.type != OPEN_BRACE && ((Operation*)operation.data)->priority <= binary_operation->priority)
 							{
 								operation = remove_operation_from_stack(&stack);
 								add_expression_node(expression, operation.type, operation.data);
@@ -193,7 +197,7 @@ end_expression:
 	{
 		operation = remove_operation_from_stack(&stack);
 
-		if(!operation.type)
+		if(operation.type == OPEN_BRACE)
 			goto error;
 
 		add_expression_node(expression, operation.type, operation.data);
@@ -288,6 +292,14 @@ void print_expression_in_postfix_notation(
 		{
 			case OPERAND:
 				print_operand(context, node->data);
+				break;
+
+			case OPEN_BRACE:
+				print("( ");
+				break;
+
+			case CLOSE_BRACE:
+				print(") ");
 				break;
 
 			case UNARY_OPERATION:

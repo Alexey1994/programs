@@ -44,7 +44,7 @@ static void print_spaces(Number number_of_spaces)
 {
 	while(number_of_spaces)
 	{
-		printf("    ");
+		print("    ");
 		--number_of_spaces;
 	}
 }
@@ -60,47 +60,48 @@ static void print_lua_value(Lua_State* state, Number index_in_stack, Number leve
 	switch(lua_type(state, index_in_stack))
 	{
 		case LUA_NIL:
-			printf("nil");
+			print("nil");
 			break;
 
 		case LUA_NUMBER:
 			number = lua_tonumber(state, index_in_stack);
-			printf("%g", number);
+			//print(_Rational_Number, (Rational_Number32)number);
+			print(_Number, (Number)number);
 			break;
 
 		case LUA_STRING:
 			string = lua_tostring(state, index_in_stack);
-			printf("%s", string);
+			print(string);
 			break;
 
 		case LUA_TABLE:
-			printf("{\n");
+			print("{\n");
 
 			lua_pushnil(state);
 			while(lua_next(state, index_in_stack) != 0)
 			{
 				print_lua_value(state, lua_gettop(state) - 1, level + 1, 1);
-				printf(" = ");
+				print(" = ");
 				print_lua_value(state, lua_gettop(state), level + 1, 0);
-				printf("\n");
+				print("\n");
 
 				lua_remove(state, -1);
 			}
 
 			print_spaces(level);
-			printf("}");
+			print("}");
 			break;
 
 		case LUA_FUNCTION:
-			printf("function\n");
+			print("function\n");
 			break;
 
 		case LUA_USERDATA:
-			printf("userdata\n");
+			print("userdata\n");
 			break;
 
 		default:
-			printf("undefined type %d\n", lua_type(state, index_in_stack));
+			print("неизвестный тип ", _Number, lua_type(state, index_in_stack), "\n");
 	}
 }
 
@@ -119,7 +120,7 @@ Number lua_print(Lua_State* state)
 		--number_of_arguments;
 	}
 
-	printf("\n");
+	print("\n");
 
 	return 0;
 }
@@ -138,14 +139,17 @@ Number lua_execute(Lua_State* state)
 		return 0;
 	}
 
-	Number16 command[256];
+	Number16* command;//[256];
 
-	to_wide_string(lua_tostring(state, 1), command, 256);
+	command = convert_utf8_to_unicode(lua_tostring(state, 1));
+	//to_wide_string(lua_tostring(state, 1), command, 256);
 	lua_pop(state, 1);
 
 	Sturtup_Info        startup_info = {.size = sizeof(Sturtup_Info)};
 	Process_Information process_info;
-	lua_pushnumber(state, CreateProcessW(L"C:\\Windows\\system32\\cmd.exe", command, 0, 0, 0, 0, 0, 0, &startup_info, &process_info));
+	//lua_pushnumber(state, CreateProcessW(L"C:\\Windows\\system32\\cmd.exe", command, 0, 0, 0, 0, 0, 0, &startup_info, &process_info));
+	lua_pushnumber(state, CreateProcessW(0, command, 0, 0, 0, 0, 0, 0, &startup_info, &process_info));
+	free_memory(command);
 
 	//lua_pushnumber(state, ShellExecuteA(0, 0, "C:\\Windows\\directx.log", 0, 0, 0));//ShellExecuteW(0, 0, command, 0, 0, 0));
 

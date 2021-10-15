@@ -13,9 +13,10 @@ typedef struct
 	Byte*  source;
 
 	Integer_Number (*read_bytes)(Byte* source, Byte* bytes, Number number_of_bytes);
-	Boolean        (*end_of_data)(Byte* source);
+	//Boolean        (*end_of_data)(Byte* source);
 	void           (*close_source)(Byte* source);
 
+	Boolean end_of_data;
 	Boolean accumulate_bytes;
 	Number  accumulator_start_index;
 	Number  size_of_buffer;
@@ -66,7 +67,7 @@ Integer_Number read_next_byte(Reader* reader)
 	}
 	else if(reader->accumulate_bytes)
 	{
-		if(reader->end_of_data && reader->end_of_data(reader->source))
+		if(reader->end_of_data)
 			return 0;
 
 		bytes_readed = reader->read_bytes(reader->source, reader->buffer + reader->end_index, 1);
@@ -82,10 +83,13 @@ Integer_Number read_next_byte(Reader* reader)
 	}
 	else
 	{
-		if(reader->end_of_data && reader->end_of_data(reader->source))
+		if(reader->end_of_data)
 			return 0;
 
 		bytes_readed = reader->read_bytes(reader->source, reader->buffer, SIZE_OF_READER_BUFFER);
+
+		if(bytes_readed < SIZE_OF_READER_BUFFER)
+			reader->end_of_data = 1;
 
 		reader->start_index = 0;
 
@@ -113,13 +117,10 @@ Byte get_reader_byte(Reader* reader)
 
 Boolean end_of_reader(Reader* reader)
 {
-	if(!reader->end_of_data)
-		return 0;
-
 	if(reader->size_of_buffer)
 		return 0;
 
-	return reader->end_of_data(reader->source);
+	return reader->end_of_data;
 }
 
 

@@ -151,6 +151,39 @@ void write_Integer_Number(Writer* writer, Integer_Number number)
 	while(right_selector);
 }
 
+/*
+void write_Rational_Number(Writer* writer, Rational_Number number)
+{
+	Number   number_copy;
+	Number32 right_selector;
+
+	if(number < 0)
+	{
+		write_Byte(writer, '-');
+		number = -number;
+	}
+
+	number_copy    = number;
+	right_selector = 1;
+
+	for(;;)
+	{
+		number_copy /= 10;
+
+		if(!number_copy)
+			break;
+
+		right_selector *= 10;
+	}
+
+	do
+	{
+		write_Byte(writer, (Number)number / right_selector % 10 + '0');
+		right_selector /= 10;
+	}
+	while(right_selector);
+}*/
+
 
 void write_Number64_triplets(Writer* writer, Number64 number)
 {
@@ -359,6 +392,7 @@ Byte* _Number64_triplets = &write_Number64_triplets;
 Byte* _hex_Number32 = &write_hex_Number32;
 Byte* _hex_Number16 = &write_hex_Number16;
 Byte* _null_terminated_words = &write_null_terminated_words;
+//Byte* _Rational_Number = &write_Rational_Number;
 
 
 void print_in_writer(Writer* writer, ...)
@@ -379,8 +413,12 @@ void print_in_writer(Writer* writer, ...)
 		{
 			write_Number(writer, argument_address[1]);
 			argument_address += 2;
-
 		}
+		/*else if(read_function == &write_Rational_Number)
+		{
+			write_Rational_Number(writer, argument_address[1]);
+			argument_address += 2;
+		}*/
 		else if(read_function == &write_Number64)
 		{
 			write_Number64(writer, *((Number64*)(argument_address + 1)));

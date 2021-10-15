@@ -159,7 +159,7 @@ t = element({
 		height = t_height,
 
 		on_click = function()
-			%t_name.set('Окошко нажалось')
+			%t_name.set('Окошко нажалось нежно')
 			%t_height.set(200)
 		end
 	}, {
@@ -168,14 +168,14 @@ t = element({
 			y      = 0,
 			width  = 100,
 			height = 20,
-			text = 'abc'
+			text = 'Вот'
 		}, {
 			element({
 				x      = 50,
 				y      = 0,
 				width  = 100,
 				height = 20,
-				text = 'def'
+				text = 'так'
 			}, {
 
 			})

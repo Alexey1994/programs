@@ -270,6 +270,72 @@ void to_utf8_string(Number16* wide_string, Byte* utf8_string)
 #include "libs/fs.c"
 
 
+Boolean file_changed = 0;
+
+
+Boolean execute(Byte* file_name)
+{
+	Lua_State* state;
+	Message    message;
+
+restart:
+	state = lua_open(65536);
+	if(!state)
+	{
+		printf("not enough memory\n");
+		return;
+	}
+
+	register_lua_std(state);
+	register_lua_GUI(state);
+	register_lua_fs(state);
+
+	if(lua_dofile(state, file_name))
+		goto error;
+
+	while(!require_exit && !file_changed)
+	{
+		while(PeekMessageA(&message, 0, 0, 0, REMOVE_MESSAGE_FROM_QUEUE))
+		{
+			TranslateMessage(&message);
+			DispatchMessageA(&message);
+		}
+
+		SleepEx(1, 1);
+	}
+
+	/*
+	while(!require_exit && GetMessageW(&message, 0, 0, 0))
+	{
+		TranslateMessage(&message);
+		DispatchMessageW(&message);
+
+		//luaC_collectgarbage(state);
+	}*/
+
+	lua_close(state);
+
+	if(file_changed)
+	{
+		file_changed = 0;
+		require_exit = 0;
+		goto restart;
+	}
+
+	return 1;
+
+error:
+	lua_close(state);
+	return 0;
+}
+
+
+void reload_lua_file(Byte* file_name)
+{
+	file_changed = 1;
+}
+
+
 void main(Number number_of_arguments, Byte** arguments)
 //stdcall Number32 WinMain(Byte* instance, Byte* previouse_instance, Byte* arguments, Number32 show_options)
 {
@@ -287,16 +353,6 @@ void main(Number number_of_arguments, Byte** arguments)
 	//else
 	//	script_path = "main.lua";
 
-	state = lua_open(65536);
-	if(!state)
-	{
-		printf("not enough memory\n");
-		return;
-	}
-
-	register_lua_std(state);
-	register_lua_GUI(state);
-	register_lua_fs(state);
 
 	//while(lua_dofile(state, script_path))
 	//{
@@ -307,18 +363,14 @@ void main(Number number_of_arguments, Byte** arguments)
 		//system("cls");
 	//}
 
-	if(lua_dofile(state, script_path))
-		return 1;
+	Directory_Changes changes;
+	read_directory_changes(&changes, &reload_lua_file, script_path);
 
-	while(!require_exit && GetMessageW(&message, 0, 0, 0))
-	{
-		TranslateMessage(&message);
-		DispatchMessageW(&message);
-		//luaC_collectgarbage(state);
-	}
+	execute(script_path);
+	
 
-	lua_pop(state, lua_gettop(state));
-	lua_close(state);
+	//lua_pop(state, lua_gettop(state));
+	//lua_close(state);
 
 	return exit_code;
 }

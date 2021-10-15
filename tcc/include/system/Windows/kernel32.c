@@ -4,6 +4,26 @@
 
 #include <types.c>
 
+
+typedef struct
+{
+	Byte*    internal_data;
+	Byte*    internal_data_high;
+	Number32 offset;
+	Number32 offset_high;
+	Byte*    event;
+}
+Async;
+
+
+import Byte* CreateEventW(
+	Byte*     security_attributes,
+	Boolean   manual_reset,
+	Boolean   initial_state,
+	Number16* name
+);
+
+
 /*
 //https://github.com/tpn/winsdk-10/blob/master/Include/10.0.14393.0/shared/ntdddisk.h
 //https://github.com/tpn/winsdk-10/blob/master/Include/10.0.16299.0/shared/devioctl.h
@@ -42,8 +62,10 @@ import Boolean DeviceIoControl(
 	Byte*     out_buffer,
 	Number32  out_buffer_size,
 	Number32* bytes_returned,
-	Byte*     overlapped
+	Async*    overlapped
 );
+
+import Number32 WaitForSingleObject(Byte* object, Number32 milliseconds);
 
 
 //=============================== File ===============================
@@ -119,19 +141,20 @@ typedef enum
 	READONLY_FILE_ATTRIBUTE         = 1,
 	HIDDEN_FILE_ATTRIBUTE           = 2,
 	SYSTEM_FILE_ATTRIBUTE           = 4,
-	DIRECTORY_FILE_ATTRIBUTE        = 16,
-	ARCHIVE_FILE_ATTRIBUTE          = 32,
-	DEVICE_FILE_ATTRIBUTE           = 64,
-	NORMAL_FILE_ATTRIBUTE           = 128,
-	TEMPORARY_FILE_ATTRIBUTE        = 256,
-	SPARSE_FILE_FILE_ATTRIBUTE      = 512,
-	REPARSE_POINT_FILE_ATTRIBUTE    = 1024,
-	COMPRESSED_FILE_ATTRIBUTE       = 2048,
-	OFFLINE_FILE_ATTRIBUTE          = 4096,
-	NOT_INDEXED_FILE_ATTRIBUTE      = 8192,
-	ENCRYPTED_FILE_ATTRIBUTE        = 16384,
+	DIRECTORY_FILE_ATTRIBUTE        = 0x10,
+	ARCHIVE_FILE_ATTRIBUTE          = 0x20,
+	DEVICE_FILE_ATTRIBUTE           = 0x40,
+	NORMAL_FILE_ATTRIBUTE           = 0x80,
+	TEMPORARY_FILE_ATTRIBUTE        = 0x100,
+	SPARSE_FILE_FILE_ATTRIBUTE      = 0x200,
+	REPARSE_POINT_FILE_ATTRIBUTE    = 0x400,
+	COMPRESSED_FILE_ATTRIBUTE       = 0x800,
+	OFFLINE_FILE_ATTRIBUTE          = 0x1000,
+	NOT_INDEXED_FILE_ATTRIBUTE      = 0x2000,
+	ENCRYPTED_FILE_ATTRIBUTE        = 0x4000,
+	BACKUP_SEMANTICS_FILE_ATTRIBUTE = 0x02000000,
 	NO_BUFFERING_FILE_ATTRIBUTE     = 0x20000000,
-	BACKUP_SEMANTICS_FILE_ATTRIBUTE = 0x02000000
+	ASYNC_FILE_ATTRIBUTE            = 0x40000000,
 }
 File_Attribute;
 
@@ -172,7 +195,7 @@ import Bit8 ReadFile(
 	Bit8*  buffer,
 	Bit32  buffer_length,
 	Bit32* bytes_readed,
-	Bit8*  overlapped
+	Async* overlapped
 );
 
 import Bit8 WriteFile (
@@ -180,7 +203,7 @@ import Bit8 WriteFile (
 	Bit8*  data,
 	Bit32  data_length,
 	Bit32* bytes_writed,
-	Bit8*  overlapped
+	Async* overlapped
 );
 
 typedef enum
@@ -349,8 +372,8 @@ import Boolean ReadDirectoryChangesW(
 	Boolean            watch_subtree,
 	Number32           notify_filter,
 	Number32*          bytes_returned,
-	Byte*              overlapped,
-	void             (*notify)(Number32 error_code, Number32 bytes_transfered, Byte* overlapped)
+	Async*             overlapped,
+	stdcall void     (*notify)(Number32 error_code, Number32 bytes_transfered, Async* overlapped)
 );
 
 //=============================== Memory =============================
@@ -520,6 +543,10 @@ import Boolean CreateProcessW(
 	Process_Information* process_information
 );
 
+#define STILL_ACTIVE 259
+#define STATUS_PENDING 
+import Number32 GetExitCodeProcess(Byte* process, Number32* exit_code);
+
 
 //=============================== Thread =============================
 
@@ -532,7 +559,8 @@ typedef struct
 Windows_Sequrity_Attributes;
 
 
-import void  Sleep        (Bit32 milliseconds);
+import void     Sleep     (Bit32 milliseconds);
+import Number32 SleepEx   (Number32 milliseconds, Boolean alertable);
 import Bit32 CreateThread (
 	Windows_Sequrity_Attributes* security_attributes,
 	Number32                     stack_size,
@@ -623,6 +651,7 @@ typedef enum
 Code_Page;
 
 import Number32 WideCharToMultiByte(Number32 code_page, Number32 flags, Number16* wide_chars, Number32 number_of_wide_chars, Byte* chars, Number32 number_of_chars, Byte* default_char, Boolean* used_default_char);
+import Number32 MultiByteToWideChar(Number32 code_page, Number32 flags, Byte* chars, Number32 number_of_chars, Number16* wide_chars, Number32 number_of_wide_chars);
 
 
 import Number32 GetTickCount();

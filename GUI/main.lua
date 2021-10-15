@@ -12,11 +12,7 @@ a = window({
 	x      = 0,
 	y      = 0,
 	width  = 512,
-	height = 512,
-
-	on_destroy = function()
-		exit(0)
-	end
+	height = 512
 })
 
 a:show()

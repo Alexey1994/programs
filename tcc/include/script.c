@@ -931,14 +931,16 @@ void main()
 		//"б = Точка 3, 4\n"
 		//"в = (1, Точка)"
 
-		"a = [1, 2, [3, 4]]"
+		//"a = [1, 2, [3, 4]]"
+		//"a = (1 , 2 , (3 , 4) , 5)"
+		"a = (1, 2)"
 		//"a = [[0], [1 + 2]]"//]\n"
 		//"b = [2, 3]\n"
 		//"c = dot[a, b]\n"
 	);
 	parse_Script_type(&parser, &reader);
 	calculate_Script_fields(&parser);
-	calculate_Script_links(&parser);
+	//calculate_Script_links(&parser);
 	execute_Script(&parser);
 	deinitialize_Script_parser(&parser);
 }

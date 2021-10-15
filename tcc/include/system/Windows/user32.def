@@ -21,6 +21,7 @@ RedrawWindow
 MoveWindow
 SetWindowTextW
 ScrollWindow
+ShowScrollBar
 DestroyWindow
 
 BeginPaint

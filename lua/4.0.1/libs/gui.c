@@ -435,7 +435,64 @@ Number lua_set_window_text(Lua_State* state)
 	return 0;
 }
 
+Number lua_set_window_class(Lua_State* state)
+{
+	/*Number number_of_arguments;
+	Lua_Window* window;
+
+	number_of_arguments = lua_gettop(state);
+	if(number_of_arguments != 2)
+	{
+		lua_pop(state, number_of_arguments);
+		return 0;
+	}
+
+	lua_getfield(state, 1, "data");
+	window = lua_touserdata(state, -1);
+	if(window)
+	{
+		Number16 text[256];
+		to_wide_string(lua_tostring(state, 2), text, 256);
+		SetWindowLong(window->window, GWL_STYLE, );
+	}
+	lua_pop(state, 3);*/
+
+	return 0;
+}
+
 Number lua_scroll_window(Lua_State* state)
+{
+	Number number_of_arguments;
+	Lua_Window* window;
+
+	number_of_arguments = lua_gettop(state);
+	if(number_of_arguments != 7)
+	{
+		lua_pop(state, number_of_arguments);
+		return 0;
+	}
+
+	Integer_Number x = lua_tonumber(state, 2);
+	Integer_Number y = lua_tonumber(state, 3);
+	Integer_Number clip_x = lua_tonumber(state, 4);
+	Integer_Number clip_y = lua_tonumber(state, 5);
+	Integer_Number clip_width = lua_tonumber(state, 6);
+	Integer_Number clip_height = lua_tonumber(state, 7);
+
+	lua_getfield(state, 1, "data");
+	window = lua_touserdata(state, -1);
+	if(window)
+	{
+		Windows_Rectangle clip = {clip_x, clip_y, clip_width, clip_height};
+		ScrollWindow(window->window, x, y, 0, &clip);
+		InvalidateRect(window->window, 0, 1);
+	}
+	lua_pop(state, lua_gettop(state));
+
+	return 0;
+}
+
+Number lua_repaint_window(Lua_State* state)
 {
 	Number number_of_arguments;
 	Lua_Window* window;
@@ -448,13 +505,13 @@ Number lua_scroll_window(Lua_State* state)
 	}
 
 	lua_getfield(state, 1, "data");
-	window = lua_touserdata(state, 2);
+	window = lua_touserdata(state, -1);
 	if(window)
 	{
-		Windows_Rectangle clip = {0, 0, 100, 100};
-		ScrollWindow(window->window, 0, -100, 0, &clip);
+		//RedrawWindow(window->window, 0, 0, RDW_ALLCHILDREN | RDW_UPDATENOW);
+		InvalidateRect(window->window, 0, 1);
 	}
-	lua_pop(state, 2);
+	lua_pop(state, lua_gettop(state));
 
 	return 0;
 }
@@ -691,6 +748,10 @@ Number lua_create_window(Lua_State* state)
 
 		lua_pushcclosure(state, &lua_scroll_window, 0);
 		lua_setfield(state, 1, "scroll");
+		lua_pop(state, 1);
+
+		lua_pushcclosure(state, &lua_repaint_window, 0);
+		lua_setfield(state, 1, "repaint");
 		lua_pop(state, 1);
 
 		lua_pushcclosure(state, &lua_destroy_window, 0);

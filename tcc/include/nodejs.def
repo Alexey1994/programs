@@ -1,5 +1,0 @@
-LIBRARY node.exe
-
-EXPORTS
-node_module_register
-napi_get_node_version

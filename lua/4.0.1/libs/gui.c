@@ -1,8 +1,8 @@
 #include <data-structures/stack.c>
-#include <system/Windows/user32.c>
-#include <system/Windows/gdi32.c>
-#include <system/thread.c>
-#include <system/file.c>
+#include <Windows/user32.c>
+#include <Windows/gdi32.c>
+#include <thread.c>
+#include <file.c>
 
 
 typedef struct

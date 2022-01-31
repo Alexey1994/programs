@@ -1,1 +1,0 @@
-"D:\установить\операционные системы\qemu\qemu-system-x86_64w.exe" -boot d -m 512 -usb -device usb-mouse -device pci-ohci -hda D:\творить\программы\белка\VM\storage

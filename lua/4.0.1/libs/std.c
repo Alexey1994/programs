@@ -60,13 +60,13 @@ static void print_lua_value(Lua_State* state, Number index_in_stack, Number leve
 	switch(lua_type(state, index_in_stack))
 	{
 		case LUA_NIL:
-			print("nil");
+			print("s", "nil");
 			break;
 
 		case LUA_NUMBER:
 			number = lua_tonumber(state, index_in_stack);
 			//print(_Rational_Number, (Rational_Number32)number);
-			print(_Number, (Number)number);
+			print("n", (Number)number);
 			break;
 
 		case LUA_STRING:
@@ -75,33 +75,33 @@ static void print_lua_value(Lua_State* state, Number index_in_stack, Number leve
 			break;
 
 		case LUA_TABLE:
-			print("{\n");
+			print("s", "{\n");
 
 			lua_pushnil(state);
 			while(lua_next(state, index_in_stack) != 0)
 			{
 				print_lua_value(state, lua_gettop(state) - 1, level + 1, 1);
-				print(" = ");
+				print("s", " = ");
 				print_lua_value(state, lua_gettop(state), level + 1, 0);
-				print("\n");
+				print("s", "\n");
 
 				lua_remove(state, -1);
 			}
 
 			print_spaces(level);
-			print("}");
+			print("s", "}");
 			break;
 
 		case LUA_FUNCTION:
-			print("function\n");
+			print("s", "function\n");
 			break;
 
 		case LUA_USERDATA:
-			print("userdata\n");
+			print("s", "userdata\n");
 			break;
 
 		default:
-			print("неизвестный тип ", _Number, lua_type(state, index_in_stack), "\n");
+			print("sns", "неизвестный тип ", lua_type(state, index_in_stack), "\n");
 	}
 }
 
@@ -120,13 +120,13 @@ Number lua_print(Lua_State* state)
 		--number_of_arguments;
 	}
 
-	print("\n");
+	print("s", "\n");
 
 	return 0;
 }
 
 
-#include <system/Windows/shell32.c>
+#include <Windows/shell32.c>
 
 Number lua_execute(Lua_State* state)
 {

@@ -39,7 +39,7 @@
 #define LUA_NUM_TYPE double
 #endif
 
-typedef LUA_NUM_TYPE Number;
+//typedef LUA_NUM_TYPE Number;
 
 /* function to convert a Number to a string */
 #define NUMBER_FMT	"%.16g"		/* LUA_NUMBER */

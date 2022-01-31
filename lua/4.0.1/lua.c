@@ -1,4 +1,7 @@
-#define size_t int
+#include <types.c>
+
+
+#define size_t Number
 #define INT_MAX 2147483647
 #define ULONG_MAX 0xffffffffUL
 #define NULL 0
@@ -11,7 +14,7 @@ typedef char* FILE;
 #define	STDOUT_FILENO	1
 #define	STDERR_FILENO	2
 
-extern FILE _iob[];
+import FILE _iob[];
 
 #define stdin	(&_iob[STDIN_FILENO])
 #define stderr	(&_iob[STDERR_FILENO])
@@ -25,17 +28,15 @@ typedef char *va_list;
 
 
 #define _JBLEN 16
-#define _JBTYPE int
+#define _JBTYPE Number
 typedef _JBTYPE jmp_buf[_JBLEN];
-int	_setjmp (jmp_buf);
+Number	_setjmp (jmp_buf);
 #define	setjmp(x)	_setjmp(x)
-void	longjmp (jmp_buf, int);
+void	longjmp (jmp_buf, Number);
 
 
 double strtod(char* s, char* end);
 
-
-//#include <types.c>
 
 /*
 //////////////////////// lua.h //////////////////
@@ -275,14 +276,14 @@ Boolean file_changed = 0;
 
 Boolean execute(Byte* file_name)
 {
-	Lua_State* state;
-	Message    message;
+	Lua_State*      state;
+	Windows_Message message;
 
 restart:
 	state = lua_open(65536);
 	if(!state)
 	{
-		printf("not enough memory\n");
+		print("s", "нет памяти\n");
 		return;
 	}
 
@@ -336,12 +337,12 @@ void reload_lua_file(Byte* file_name)
 }
 
 
-void main(Number number_of_arguments, Byte** arguments)
+Number main(Number number_of_arguments, Byte** arguments)
 //stdcall Number32 WinMain(Byte* instance, Byte* previouse_instance, Byte* arguments, Number32 show_options)
 {
-	Byte*      script_path;
-	Lua_State* state;
-	Message    message;
+	Byte*           script_path;
+	Lua_State*      state;
+	Windows_Message message;
 
 	if(number_of_arguments > 1)
 		script_path = arguments[1];

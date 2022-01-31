@@ -1,0 +1,19 @@
+LIBRARY gdi32.dll
+
+EXPORTS
+
+SwapBuffers
+SetDIBitsToDevice
+ChoosePixelFormat
+SetPixelFormat
+CreateSolidBrush
+CreatePatternBrush
+SetBkMode
+GetDIBits
+
+TextOutA
+TextOutW
+
+CreateFontW
+
+SelectObject

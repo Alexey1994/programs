@@ -1,795 +1,586 @@
-#include <memory/memory.h>
-
-void print_token(Buffer* token);
-
-//#include "variables-calculator.h"
-//#include "links-calculator.h"
-#include "file/file.h"
+#include <reader.c>
+#include <data-structures/stack.c>
 
 
-Z_32 compare_UTF8_string(Buffer* string1, Buffer* string2);
-
-
-
-Label_Operand* find_label(Parser* parser, Buffer* name)
+typedef enum
 {
-	for_each_buffer_element(&parser->current_type.labels, Operand*, operand)
-		Label_Operand* label = &operand->data;
-
-		if(!compare_UTF8_string(&label->name, name))
-			return label;
-	end_for_each_buffer_element
-
-	return 0;
+	EOF_TOKEN = 256,
+	EQUAL_TOKEN,
+	NOT_EQUAL_TOKEN,
+	GREATHER_OR_EQUAL_TOKEN,
+	LESSER_OR_EQUAL_TOKEN,
+	ARROW_TOKEN,
+	CONST_NUMBER_TOKEN,
+	CONST_STRING_TOKEN,
+	NUMBER_TYPE_TOKEN,
+	IF_TOKEN,
+	NAME_TOKEN
 }
+C_Token;
+
+char C_token_names[][16] = {
+	"<EOF>",
+	"==",
+	"!=",
+	">=",
+	"<=",
+	"->",
+	"const number",
+	"const string",
+	"Number",
+	"if",
+	"name",
+};
 
 
-Type_Node* get_type_node(Parser* parser, N_32 type_index, Buffer* node_name)
+typedef struct
 {
-	/*Buffer*    type;
-	Type_Node* node;
-	N_32       node_index;
-
-	type = parser->types.data + type_index * sizeof(Buffer);
-
-	for(node = type->data, node_index = 0; node_index < type->length / sizeof(Type_Node); ++node, ++node_index)
-	{
-		if(!compare_UTF8_string(&node->name, node_name))
-			return node;
-	}*/
-
-	return 0;
+	Stack name;
+	Stack inputs;
+	Stack outputs;
+	Stack body;
 }
+C_Function;
 
-
-N_32 get_type_node_index(Parser* parser, N_32 type_index, Buffer* node_name)
+typedef struct
 {
-	/*Buffer*    type;
-	Type_Node* node;
-	N_32       node_index;
+	Reader* reader;
+	Number  number;
+	Stack   name;
+	Stack   string;
+	Number  line_number;
+	Boolean is_error;
 
-	type = parser->types.data + type_index * sizeof(Buffer);
-
-	for(node = type->data, node_index = 0; node_index < type->length / sizeof(Type_Node); ++node, ++node_index)
-	{
-		if(!compare_UTF8_string(&node->name, node_name))
-			return node_index;
-	}*/
-
-	return -1;
+	C_Token token;
 }
+C_Context;
 
 
-/*
-Function_Body_Operand* create_function_body_operand(Buffer* expressions)
+void print_token(C_Token token)
 {
-	Function_Body_Operand* operand;
-
-	operand = allocate_memory(sizeof(Function_Body_Operand));
-	operand->type = operand->type2 = FUNCTION_BODY;
-	initialize_buffer(&operand->local_variables, 20);
-	operand->expressions = expressions;
-
-	return operand;
-}
-*/
-
-Call_Operand* create_call_operand(Buffer* name)
-{
-	Call_Operand* operand;
-
-	operand = allocate_memory(sizeof(Call_Operand));
-	operand->type = operand->type2 = CALL;
-
-	initialize_buffer(&operand->name, 10);
-	add_buffer_in_buffer_end(&operand->name, name);
-
-	return operand;
-}
-
-
-N_32 read_next_UTF_8_character_from_string(N_8** string)
-{
-	N_8  current_byte;
-	N_32 number_of_bytes;
-	N_32 result;
-
-	current_byte = **string;
-	++*string;
-
-	if(!(current_byte & 0b10000000))
-		return current_byte;
-
-	if((current_byte & 0b11110000) == 0b11110000)
+	if(token < 256)
 	{
-		number_of_bytes = 4;
-		result = (current_byte & 0b00001111) << 18;
-	}
-	else if((current_byte & 0b11100000) == 0b11100000)
-	{
-		number_of_bytes = 3;
-		result = (current_byte & 0b00011111) << 12;
-	}
-	else if((current_byte & 0b11000000) == 0b11000000)
-	{
-		number_of_bytes = 2;
-		result = (current_byte & 0b00111111) << 6;
+		Byte s[2];
+		s[0] = token;
+		s[1] = '\0';
+		print("s", s);
 	}
 	else
-		goto error;
-
-	cycle(0, number_of_bytes - 1, 1)
-	current_byte = **string;
-	++*string;
-	result |= (current_byte & 0b00111111) << ((number_of_bytes - 2 - i) * 6);
-	end
-
-	return result;
-
-error:
-	return 1;
-}
-
-
-Boolean is_latin_character(N_32 character)
-{
-	return character >= 'a' && character <= 'z' || character >= 'A' && character <= 'Z';
-}
-
-
-Boolean is_cyrillic_character(N_32 character)
-{
-	return character >= 0x0410 && character <= 0x044F || character == 0x0451 || character == 0x0401;
-}
-
-/*
-Boolean is_number_character(N_32 character)
-{
-	return character >= '0' && character <= '9';
-}*/
-
-
-N_32 read_token(Buffer* token, Reader* reader)
-{
-	N_16 character;
-
-	clear_buffer(token);
-
-	if(end_of_reader(reader))
-		goto error;
-
-	character = get_reader_UTF_8_character(reader);
-
-	if(!is_latin_character(character) && !is_cyrillic_character(character) && character != '_')
-		goto error;
-
-	read_UTF_8_character(reader);
-	add_in_buffer_end(token, N_16, character);
-
-	while(!end_of_reader(reader))
 	{
-		character = get_reader_UTF_8_character(reader);
+		print("s", C_token_names[token - 256]);
+	}
+}
 
-		if(!is_latin_character(character) && !is_cyrillic_character(character) && !is_number_character(character) && character != '_')
+
+C_Token read_next_C_token(C_Context* context)
+{
+	Byte  character;
+
+repeat:
+
+	character = get_reader_byte(context->reader);
+
+	if(end_of_reader(context->reader))
+		return EOF_TOKEN;
+
+	read_next_byte(context->reader);
+
+	switch(character)
+	{
+		case '\n':
+			++context->line_number;
+		case '\r':
+		case '\t':
+		case ' ':
+			goto repeat;
+
+		case '#':
+			character = get_reader_byte(context->reader);
+
+			if(character == '#')
+			{
+				read_next_byte(context->reader);
+
+				for(;;)
+				{
+					if(character == '#')
+					{
+						read_next_byte(context->reader);
+						character = get_reader_byte(context->reader);
+
+						if(character == '#')
+							break;
+					}
+
+					if(end_of_reader(context->reader))
+						return EOF_TOKEN;
+
+					read_next_byte(context->reader);
+					character = get_reader_byte(context->reader);
+				}
+			}
+			else
+			{
+				for(;;)
+				{
+					if(character == '\n')
+						break;
+
+					if(end_of_reader(context->reader))
+						return EOF_TOKEN;
+
+					read_next_byte(context->reader);
+					character = get_reader_byte(context->reader);
+				}
+			}
+
+			goto repeat;
+
+		case '>':
+			if(get_reader_byte(context->reader) == '=')
+			{
+				read_next_byte(context->reader);
+				return GREATHER_OR_EQUAL_TOKEN;
+			}
 			break;
 
-		character = read_UTF_8_character(reader);
-		add_in_buffer_end(token, N_16, character);
-	}
-
-	return 1;
-
-error:
-	return 0;
-}
-
-
-Z_32 compare_token(Buffer* token, N_8* string)
-{
-	N_16* token_data;
-	N_32  token_length;
-	Z_32  result;
-
-	token_data = token->data;
-	token_length = token->length / 4;
-
-	for(; token_length && *string; --token_length, ++token_data)
-	{
-		result = *token_data - read_next_UTF_8_character_from_string(&string);
-
-		if(result)
-			return result;
-	}
-
-	if(*string)
-		return read_next_UTF_8_character_from_string(&string);
-	else if(token_length)
-		return *token_data;
-
-	return 0;
-}
-
-
-Z_32 compare_UTF8_string(Buffer* string1, Buffer* string2)
-{
-	N_16* string1_data;
-	N_32  string1_length;
-	N_16* string2_data;
-	N_32  string2_length;
-	Z_32  result;
-
-	string1_data = string1->data;
-	string1_length = string1->length / 4;
-	string2_data = string2->data;
-	string2_length = string2->length / 4;
-
-	for(; string1_length && string2_length; --string1_length, ++string1_data, --string2_length, ++string2_data)
-	{
-		result = *string1_data - *string2_data;
-
-		if(result)
-			return result;
-	}
-
-	if(string1_length)
-		return 1;
-
-	if(string2_length)
-		return -1;
-
-	return 0;
-}
-
-
-void print_token(Buffer* token)
-{
-	for_each_buffer_element(token, N_16, character)
-		printf("%c", character);
-	end_for_each_buffer_element
-}
-
-
-Boolean read_expression(Buffer* expression, Parser* parser);
-
-
-Boolean read_data_block(Parser* parser, Buffer* expressions)
-{
-	Expression expression;
-
-	next_reader_byte(&parser->reader);
-	initialize_buffer(expressions, 100);
-
-	while(!end_of_reader(&parser->reader) && get_reader_byte(&parser->reader) != ']')
-	{
-		if(!read_expression(&expression.expression_data, parser))
-			goto error;
-
-		add_in_buffer_end(expressions, Expression, expression);
-	}
-
-	if(get_reader_byte(&parser->reader) != ']')
-	{
-		printf("expected ]\n");
-		goto error;
-	}
-
-	next_reader_byte(&parser->reader);
-
-	return 1;
-
-error:
-	deinitialize_buffer(&expressions);
-	return 0;
-}
-
-
-Byte* parse_expression_operand(Parser* parser)
-{
-	N_8   operand_type;
-	Byte* operand;
-
-	operand = 0;
-
-	read_token(&parser->token, &parser->reader);
-	read_spaces(&parser->reader);
-
-	if(parser->token.length)
-	{
-		Boolean end_of_reader_data = end_of_reader(&parser->reader);
-
-		if(!end_of_reader_data)
-		{
-			N_32 character = get_reader_UTF_8_character(&parser->reader);
-
-			if(character == ':')
+		case '<':
+			if(get_reader_byte(context->reader) == '=')
 			{
-				read_UTF_8_character(&parser->reader);
+				read_next_byte(context->reader);
+				return LESSER_OR_EQUAL_TOKEN;
+			}
+			break;
 
-				if(find_label(parser, &parser->token))
+		case '!':
+			if(get_reader_byte(context->reader) == '=')
+			{
+				read_next_byte(context->reader);
+				return NOT_EQUAL_TOKEN;
+			}
+			break;
+
+		case '-':
+			if(get_reader_byte(context->reader) == '>')
+			{
+				read_next_byte(context->reader);
+				return ARROW_TOKEN;
+			}
+			break;
+
+		case '0'...'9':
+
+			context->number = character - '0';
+			
+			for(;;)
+			{
+				character = get_reader_byte(context->reader);
+
+				if(character < '0' || character > '9')
+					break;
+
+				if(end_of_reader(context->reader))
+					break;
+
+				context->number *= 10;
+				context->number += character - '0';
+
+				read_next_byte(context->reader);
+			}
+
+			return CONST_NUMBER_TOKEN;
+
+		case '"':
+			initialize_stack(&context->string, 16);
+
+			for(;;)
+			{
+				character = get_reader_byte(context->reader);
+				read_next_byte(context->reader);
+
+				if(character == '"')
+					break;
+
+				if(character == '\\')
 				{
-					printf("error: label ");
-					print_token(&parser->token);
-					printf("was defined\n");
+					character = get_reader_byte(context->reader);
+					read_next_byte(context->reader);
+
+					switch(character)
+					{
+						case '\\':
+							add_bytes_in_stack(&context->string, &character, 1);
+							break;
+
+						case 'n':
+							character = '\n';
+							add_bytes_in_stack(&context->string, &character, 1);
+							break;
+
+						case 'r':
+							character = '\r';
+							add_bytes_in_stack(&context->string, &character, 1);
+							break;
+
+						case 't':
+							character = '\t';
+							add_bytes_in_stack(&context->string, &character, 1);
+							break;
+					}
 				}
 				else
+					add_bytes_in_stack(&context->string, &character, 1);
+
+				if(end_of_reader(context->reader))
 				{
-					operand = create_label_operand(&parser->token, parser->current_expression_index);
-					add_in_buffer_end(&parser->current_type.labels, Label_Operand*, operand);
+					//context->is_error = 1;
+					return 0;
 				}
 			}
-			else if(character == '(')
+
+			character = '\0';
+			add_bytes_in_stack(&context->string, &character, 1);
+
+			return CONST_STRING_TOKEN;
+
+		case 'a'...'z':
+		case 'A'...'Z':
+		case '_':
+			initialize_stack(&context->name, 16);
+
+			while(!end_of_reader(context->reader))
 			{
-				read_UTF_8_character(&parser->reader);
-				read_UTF_8_character(&parser->reader);
-				operand = create_call_operand(&parser->token);
-			}
-			else
-			{
-				operand = create_name_operand(&parser->token);
-			}
-		}
-		else
-		{
-			operand = create_name_operand(&parser->token);
-		}
-	}
-	else
-	{
-		operand_type = get_reader_byte(&parser->reader);
+				add_bytes_in_stack(&context->name, &character, 1);
+				character = get_reader_byte(context->reader);
 
-		if(is_number_character(operand_type))
-		{
-			operand = create_number_operand(read_N_32(&parser->reader));
-		}
-		else
-		{
-			switch(operand_type)
-			{
-			case '[':
-			{
-				Buffer* expressions = allocate_memory(sizeof(Buffer));
-				
-				if(read_data_block(parser, expressions))
-					operand = create_data_block_operand(expressions);
-				break;
-			}
-
-			case '"':
-				next_reader_byte(&parser->reader);
-
-				N_32 character;
-				Buffer string_data;
-
-				initialize_buffer(&string_data, 4);
-
-				BUFFER(string_data, 4)
-				{
-					while(!end_of_reader(&parser->reader))
-					{
-						character = read_UTF_8_character(&parser->reader);
-
-						if(character == '\\')
-						{
-							character = read_UTF_8_character(&parser->reader);
-						}
-
-						if(character == '"')
-						{
-							next_reader_byte(&parser->reader);
-							break;
-						}
-
-						add_in_buffer_end(&string_data, N_32, character);
-					}
-
-					operand = create_static_string_operand(&string_data);
-				}
-				END_BUFFER(string_data)
-				break;
-
-			default:
-				printf("undefined character: %c [character code: %d]\n", operand_type, operand_type);
-			}
-		}
-	}
-
-	read_spaces(&parser->reader);
-
-	return operand;
-
-error:
-	return 0;
-}
-
-
-Boolean read_if_operation(Reader* reader, Byte* operation_name)
-{
-	Boolean result;
-	Byte    byte;
-
-	result = 1;
-	ACCUMULATED_READER(reader)
-		if(!read_if(&reader, operation_name))
-		{
-			result = 0;
-			restore_reader;
-		}
-
-		byte = get_reader_byte(&reader);
-
-		if(is_latin_character(byte) || is_number_character(byte))
-		{
-			result = 0;
-			restore_reader;
-		}
-		else
-		{
-			add_in_buffer_begin(&_target_reader->buffer, Byte, byte);
-		}
-	END_ACCUMULATED_READER
-
-	return result;
-}
-
-
-Byte* read_unary_operation(Parser* parser)
-{
-	Byte byte;
-
-	byte = get_reader_byte(&parser->reader);
-
-	switch(byte)
-	{
-		case '-':
-		case '!':
-			next_reader_byte(&parser->reader);
-			return byte;
-
-		case 'p':
-		{
-			if(read_if_operation(&parser->reader, "print"))
-				return 'p';
-
-			break;
-		}
-
-		case 'N':
-		{
-			if(read_if_operation(&parser->reader, "Number"))
-				return 'N';
-
-			break;
-		}
-	}
-
-	Boolean is_function_link;
-	ACCUMULATED_READER(&parser->reader)
-		BUFFER(token, 100)
-			read_token(&token, &reader);
-			add_in_buffer_end(&token, N_16, 0);
-			
-			is_function_link = parse_type(token.data, parser->types);
-
-			if(!is_function_link)
-			{
-				restore_reader;
-			}
-		END_BUFFER(token)
-	END_ACCUMULATED_READER
-
-	return is_function_link;
-}
-
-
-Byte* read_binary_operation(Parser* parser)
-{
-	Byte byte;
-
-	byte = get_reader_byte(&parser->reader);
-
-	switch(byte)
-	{
-		case '=':
-		case '+':
-		case '-':
-		case '/':
-		case '*':
-		case '.':
-			next_reader_byte(&parser->reader);
-			return byte;
-
-		case 'i':
-		{
-			if(read_if_operation(&parser->reader, "if"))
-				return 'i';
-			break;
-		}
-	}
-
-	return 0;
-}
-
-
-Boolean read_expression(Buffer* expression, Parser* parser)
-{
-	return parse_expression(
-		expression,
-		&parser->reader,
-		parser,
-		&parse_expression_operand,
-		&read_unary_operation,
-		&read_binary_operation
-	);
-}
-
-
-#include "executor.h"
-
-
-void add_variable(Parser* parser, Buffer* variable_name, N_32 variable_type_index)
-{
-	Variable_Operand* variable;
-
-	variable = create_variable_operand(variable_name, parser->current_type.variables.length / sizeof(Variable_Operand*), variable_type_index);
-	add_in_buffer_end(&parser->current_type.variables, Operand*, variable);
-}
-
-
-Variable_Operand* find_variable(Parser* parser, Buffer* name)
-{
-	for_each_buffer_element(&parser->current_type.variables, Operand*, operand)
-		Variable_Operand *variable = &operand->data;
-
-		if(!compare_UTF8_string(&variable->name, name))
-			return variable;
-	end_for_each_buffer_element
-
-	return 0;
-}
-
-
-static void add_variables_calculator_operand(Parser* parser, Operand* operand, Operand_Type* result_type, Byte* result)
-{
-	*result_type = UNDEFINED_FROM_STACK;
-
-	switch(operand->type)
-	{
-		case NAME_OPERAND:
-		{
-			Name_Operand* name_operand = &operand->data;
-			
-			Name_Operand* name_result = result;
-			*name_result = *name_operand;
-			*result_type = NAME_OPERAND;
-			break;
-		}
-	}
-}
-
-
-static void execute_variables_calculator_unary_operation(
-	Parser* parser,
-	Byte* operation,
-	Operand* operand,
-	Operand_Type* result_type, Byte* result
-)
-{
-	*result_type = UNDEFINED_FROM_STACK;
-
-	switch(operation)
-	{
-		case 'N':
-		{
-			if(operand->type != NAME_OPERAND)
-			{
-				printf("error: variable definition\n");
-				parser->has_error = 1;
-				break;
-			}
-
-			Name_Operand* name_operand = &operand->data;
-
-			if(find_variable(parser, &name_operand->name))
-			{
-				printf("error: variable ");
-				print_token(&name_operand->name);
-				printf(" was defined\n");
-				parser->has_error = 1;
-				break;
-			}
-
-			add_variable(parser, &name_operand->name, NUMBER);
-
-			*result_type = CAST_TO_NUMBER32;
-			break;
-		}
-
-		default:
-		{
-			/*
-			if(((N_32)operation) & 0b10000000000000000000000000000000)
-			{
-				//N_32 type_index = ((N_32)operation) & 0b01111111111111111111111111111111;
-
-				if(operand->type != NAME_OPERAND)
-				{
-					printf("error: variable definition\n");
-					parser->has_error = 1;
+				if((character < 'a' || character > 'z') && (character < 'A' || character > 'Z') && character != '_' && (character < '0' || character > '9'))
 					break;
-				}
 
-				Name_Operand* name_operand = &operand->data;
-
-				if(find_variable(parser, &name_operand->name))
-				{
-					printf("error: variable ");
-					print_token(&name_operand->name);
-					printf(" was defined\n");
-					parser->has_error = 1;
-					break;
-				}
-
-				add_variable(parser, &name_operand->name, operation);
-
-				*result_type = CAST_TO_NUMBER32;
+				read_next_byte(context->reader);
 			}
-			else
-				*result_type = UNDEFINED_FROM_STACK;*/
-		}
+
+			character = '\0';
+			add_bytes_in_stack(&context->name, &character, 1);
+
+			if(!compare_null_terminated_bytes(context->name.data, "Number"))
+				return NUMBER_TYPE_TOKEN;
+			else if(!compare_null_terminated_bytes(context->name.data, "if"))
+				return IF_TOKEN;
+
+			return NAME_TOKEN;
+
+			//print("s", context->name.data);
+			break;
 	}
+
+	return character;
 }
 
 
-static void execute_variables_calculator_binary_operation(
-	Parser* parser,
-	Byte* operation,
-	Operand* left_operand,
-	Operand* right_operand,
-	Operand_Type* result_type, Byte* result
-)
+Boolean required_C_token(C_Context* context, C_Token token)
 {
-	*result_type = UNDEFINED_FROM_STACK;
+	if(context->is_error)
+		return 0;
+
+	if(context->token != token)
+	{
+		print("ns", context->line_number + 1, ": отсутствует ");
+		print_token(token);
+		print("s", ", получен ");
+		print_token(context->token);
+		context->is_error = 1;
+		return 0;
+	}
+
+	context->token = read_next_C_token(context);
+
+	return 1;
 }
 
-
-static void execute_variables_calculator_operand_sequence(Parser* parser, Buffer* operands_stack)
+Boolean optional_C_token(C_Context* context, C_Token token)
 {
+	if(context->is_error)
+		return 0;
 
-}
+	if(context->token != token)
+		return 0;
 
-
-Boolean calculate_variables(Parser* parser)
-{
-	execute(
-		&parser->expressions,
-		parser,
-		&add_variables_calculator_operand,
-		&execute_variables_calculator_unary_operation,
-		&execute_variables_calculator_binary_operation,
-		&execute_variables_calculator_operand_sequence,
-		0
-	);
+	context->token = read_next_C_token(context);
 
 	return 1;
 }
 
 
-void calculate_links(Parser* parser)
+void expression_C_state(C_Context* context);
+
+
+void variable_or_function_call_C_state(C_Context* context)
 {
-	Expression new_expression;
-
-	for_each_buffer_element(&parser->expressions, Expression, expression)
-		initialize_buffer(&new_expression.expression_data, 100);
-		
-		for_each_buffer_element(&expression.expression_data, Expression_Node, node)
+	if(optional_C_token(context, '.'))
+	{
+		required_C_token(context, NAME_TOKEN);
+		variable_or_function_call_C_state(context);
+	}
+	else if(optional_C_token(context, '('))
+	{
+		if(!optional_C_token(context, ')'))
 		{
-			switch(node.type)
+			do
 			{
-				case OPERAND:
-				{
-					Operand* operand = node.data;
-
-					switch(operand->type)
-					{
-						case NAME_OPERAND:
-						{
-							Name_Operand* name_operand = &operand->data;
-							Label_Operand* label;
-
-							label = find_label(parser, &name_operand->name);
-								
-							if(label)
-							{
-								add_expression_node(&new_expression.expression_data, OPERAND, create_label_link_operand(label));	
-							}
-							else
-							{
-								Variable_Operand* variable = find_variable(parser, &name_operand->name);
-
-								if(variable)
-								{
-									add_expression_node(&new_expression.expression_data, OPERAND, create_variable_link_operand(variable));
-								}
-								else
-								{
-									add_expression_node(&new_expression.expression_data, OPERAND, operand);
-								}
-							}
-								
-							break;
-						}
-
-						default:
-						{
-							add_expression_node(&new_expression.expression_data, OPERAND, operand);
-						}
-					}
-					break;
-				}
-
-				case UNARY_OPERATION:
-				{
-					add_expression_node(&new_expression.expression_data, UNARY_OPERATION, node.data);
-					break;
-				}
-
-				case BINARY_OPERATION:
-				{
-					add_expression_node(&new_expression.expression_data, BINARY_OPERATION, node.data);
-					break;
-				}
+				expression_C_state(context);
 			}
-		}
-		end_for_each_buffer_element
+			while(optional_C_token(context, ','));
 
-		add_in_buffer_end(&parser->current_type.expressions, Expression, new_expression);
-	end_for_each_buffer_element
+			required_C_token(context, ')');
+		}
+
+		variable_or_function_call_C_state(context);
+	}
 }
 
 
-Boolean parse_type(Bit16* type_name, Buffer* types)
+Number get_C_operation_priority(C_Token operation_token)
 {
-	File file = open_file(type_name);
-	if(!file)
-		return 0;
-
-	Parser parser;
-	initialize_file_reader_from_file(&parser.reader, file);
-	initialize_buffer(&parser.token, 20);
-	initialize_buffer(&parser.expressions, 20);
-	parser.has_error = 0;
-	parser.types = types;
-	parser.current_expression_index = 0;
-
-	//Type type;
-	initialize_buffer(&parser.current_type.name, 10);
-	while(*type_name)
+	switch(operation_token)
 	{
-		add_in_buffer_end(&parser.current_type.name, Bit16, *type_name);
-		++type_name;
+		case '+':
+			return 2;
+
+		case '-':
+			return 2;
+
+		case '*':
+			return 3;
+
+		case '/':
+			return 3;
+
+		case '%':
+			return 3;
+
+		case '=':
+			return 4;
+
+		case '(':
+			return 1;
+
+		case 0:
+			return 0;
+
+		default:
+			print("неизвестная операция\n");
 	}
-	initialize_buffer(&parser.current_type.expressions, 100);
-	initialize_buffer(&parser.current_type.labels, 100);
-	initialize_buffer(&parser.current_type.variables, 100);
+}
 
-	while(!end_of_reader(&parser.reader))
+
+Boolean expression1_C_state(C_Context* context, Boolean require_operand, C_Token* previouse_operation);
+
+
+Boolean add_C_expression_operation(C_Context* context, C_Token operation, C_Token* previouse_operation)
+{
+	context->token = read_next_C_token(context);
+
+	if(operation != '(' && get_C_operation_priority(operation) <= get_C_operation_priority(*previouse_operation))
 	{
-		Expression expression;
-		if(!read_expression(&expression.expression_data, &parser))
+		print_token(*previouse_operation);
+		*previouse_operation = 0;
+	}
+
+	if(expression1_C_state(context, 1, &operation))
+	{
+		if(operation == '(')
+			return expression1_C_state(context, 0, &operation);
+
+		if(operation)
+			print_token(operation);
+
+		return 1;
+	}
+
+	if(operation == '(')
+	{
+		print("ns", context->line_number + 1, ": отсутствует )");
+		context->is_error = 1;
+	}
+	else if(operation)
+		print_token(operation);
+
+	return 0;
+}
+
+
+Boolean expression1_C_state(C_Context* context, Boolean require_operand, C_Token* previouse_operation)
+{
+	if(context->token == '(')
+	{
+		if(!require_operand)
+			return 0;
+
+		return add_C_expression_operation(context, '(', previouse_operation);
+	}
+	else
+	{
+		if(require_operand)
 		{
-			parser.has_error = 1;
-			break;
+			if(context->token == ')')
+			{
+				print("ns", context->line_number + 1, ": ) не может быть здесь");
+				context->is_error = 1;
+			}
+
+			switch(context->token)
+			{
+				case NAME_TOKEN:
+					print("s", "operand ");
+					context->token = read_next_C_token(context);
+					variable_or_function_call_C_state(context);
+					break;
+
+				case CONST_NUMBER_TOKEN:
+					print("ns", context->number, " ");
+					context->token = read_next_C_token(context);
+					break;
+
+				case CONST_STRING_TOKEN:
+					print("ss", context->string.data, " ");
+					context->token = read_next_C_token(context);
+					break;
+
+				default:
+					print("ns", context->line_number + 1, ": ожидалось ");
+					print_token(NAME_TOKEN);
+					print("s", ", ");
+					print_token(CONST_NUMBER_TOKEN);
+					print("s", ", ");
+					print_token(CONST_STRING_TOKEN);
+					print("s", ", получен ");
+					print_token(context->token);
+					context->is_error = 1;
+			}
 		}
 
-		add_in_buffer_end(&parser.expressions, Expression, expression);
-		++parser.current_expression_index;
+		switch(context->token)
+		{
+			case '+':
+			case '-':
+			case '*':
+			case '/':
+			case '%':
+			case '=':
+				return add_C_expression_operation(context, context->token, previouse_operation);
+
+			case ')':
+				if(*previouse_operation == 0)
+				{
+					//print("ns", context->line_number + 1, ": отсутствует )");
+					//context->is_error = 1;
+					return 0;
+				}
+
+				context->token = read_next_C_token(context);
+
+				return 1;
+		}
 	}
 
-	calculate_variables(&parser);
-	calculate_links(&parser);
+	return 0;
+}
 
-	deinitialize_reader(&parser.reader);
-	add_in_buffer_end(parser.types, Type, parser.current_type);
 
-	return !parser.has_error;
+void expression_C_state(C_Context* context)
+{
+	C_Token current_operation;
+
+	current_operation = 0;
+	//context->token = read_next_C_token(context);
+	expression1_C_state(context, 1, &current_operation);
+	print("s", "\n");
+}
+
+
+void body_C_state(C_Context* context)
+{
+	while(!context->is_error && !optional_C_token(context, '}'))
+	{
+		if(optional_C_token(context, EOF_TOKEN))
+		{
+			print("ns", context->line_number + 1, ": отсутствует ");
+			print_token(EOF_TOKEN);
+			context->is_error = 1;
+			break;
+		}
+		else if(optional_C_token(context, IF_TOKEN))
+		{
+			expression_C_state(context);
+			required_C_token(context, '{');
+			body_C_state(context);
+		}
+		else
+		{
+			expression_C_state(context);
+		}
+	}
+}
+
+
+void function_C_state(C_Context* context)
+{
+	required_C_token(context, NAME_TOKEN);
+	print("ss", context->name.data, "\n");
+
+	required_C_token(context, '(');
+
+	do
+	{
+		if(optional_C_token(context, NUMBER_TYPE_TOKEN))
+		{
+			required_C_token(context, NAME_TOKEN);
+		}
+		else if(optional_C_token(context, NAME_TOKEN))
+		{
+			required_C_token(context, NAME_TOKEN);
+		}
+	}
+	while(optional_C_token(context, ','));
+
+	required_C_token(context, ')');
+
+	required_C_token(context, ARROW_TOKEN);
+
+	required_C_token(context, '(');
+
+	do
+	{
+		if(optional_C_token(context, NUMBER_TYPE_TOKEN))
+		{
+			required_C_token(context, NAME_TOKEN);
+		}
+		else if(optional_C_token(context, NAME_TOKEN))
+		{
+			required_C_token(context, NAME_TOKEN);
+		}
+	}
+	while(optional_C_token(context, ','));
+
+	required_C_token(context, ')');
+
+	required_C_token(context, '{');
+
+	body_C_state(context);
+}
+
+
+void parse_C(C_Context* context, Reader* reader)
+{
+	context->reader = reader;
+	context->line_number = 0;
+	context->is_error = 0;
+
+	context->token = read_next_C_token(context);
+
+	while(!context->is_error && !optional_C_token(context, EOF_TOKEN))
+	{
+		function_C_state(context);
+	}
+	
 }

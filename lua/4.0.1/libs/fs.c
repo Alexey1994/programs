@@ -1,4 +1,4 @@
-void lua_get_drives(Lua_State* state)
+Number lua_get_drives(Lua_State* state)
 {
 	Number number_of_arguments;
 
@@ -38,7 +38,7 @@ void lua_get_drives(Lua_State* state)
 }
 
 
-void lua_get_files(Lua_State* state)
+Number lua_get_files(Lua_State* state)
 {
 	Number number_of_arguments;
 

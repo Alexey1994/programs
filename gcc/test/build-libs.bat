@@ -1,0 +1,1 @@
+@dlltool --kill-at --def kernel32.def --dllname kernel32.dll --output-lib kernel32.a

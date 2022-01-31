@@ -1,0 +1,56 @@
+Point (Number coord_x, Number coord_y) -> (Number x, Number y) {
+	x = coord_x
+	y = coord_y
+
+	if a {
+		x = coord_x
+		y = coord_y
+	}
+}
+
+Vector (Point a, Point b) -> (Point c) {
+	#c = Point(b.x - a.x, b.y - a.y)
+}
+
+
+File () -> (Number file_descriptor) {
+	
+}
+
+create_File (String path) -> (File f) {
+	
+}
+
+open_File (String path) -> (File f) {
+	
+}
+
+delete_File (File f) -> () {
+	
+}
+
+get_File_size (File f) -> (Number size) {
+	
+}
+
+set_File_position (File f, Number position) -> () {
+	
+}
+
+read_from_File (File f, Buffer buffer, Number number_of_bytes) -> (Number bytes_readed) {
+	
+}
+
+write_in_File (File f, Buffer buffer, Number number_of_bytes) -> (Number bytes_writed) {
+	
+}
+
+close_File (File f) -> () {
+	
+}
+
+
+main() -> () {
+	f = open_File("123")
+	1 + 2 * 3
+}

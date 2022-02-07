@@ -128,5 +128,5 @@ void main()
 
 	load_interfaces(&kernel);
 
-	kernel.console->print(&kernel, "Kernel loaded. %d bytes used\n", module_top - 1024 * 1024);
+	kernel.console->print(&kernel, "Modules loaded. %d bytes used\n", module_top - 1024 * 1024);
 }

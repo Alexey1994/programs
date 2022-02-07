@@ -40,7 +40,7 @@ Number32 main(Number number_of_arguments, Byte** arguments)
 	snprintf(buffer, 512, "cmd /c \"mkdir \"bin\\%s\"\"", module_name);
 	execute(buffer);
 
-	snprintf(buffer, 512, "cmd /c \"tcc32.exe -Iinclude32 \"%s\\main.c\" -w -c -nostdlib -fno-builtin -o \"bin\\%s\\out.elf\"\"", module_name, module_name);
+	snprintf(buffer, 512, "cmd /c \"tcc32.exe -Iglobal \"%s\\main.c\" -w -c -nostdlib -fno-builtin -o \"bin\\%s\\out.elf\"\"", module_name, module_name);
 	exit_code = execute(buffer);
 	if(exit_code)
 		goto end;

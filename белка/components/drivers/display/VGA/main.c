@@ -194,11 +194,11 @@ void test_VGA();
 
 void start_module(Kernel* kernel, Number module_address)
 {
-	test_VGA();
+	//test_VGA();
 }
 
 
-#include "IO.c"
+#include <IO.c>
 
 
 void write_regs(Byte *regs)

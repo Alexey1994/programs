@@ -1,6 +1,7 @@
 #include <kernel.h>
 
 
+static void write_Byte(Writer* writer, Byte byte);
 static void initialize_writer(Writer* writer, Byte* source, Integer_Number (*write_bytes)(Byte* source, Byte* bytes, Number size_of_bytes));
 static void deinitialize_writer(Writer* writer);
 static void flush_writer(Writer* writer);
@@ -24,6 +25,46 @@ void start_module(Kernel* kernel, Number module_address)
 }
 
 
+typedef struct
+{
+	Byte* bytes;
+	Number max_size;
+}
+Null_Terminated_Bytes_Source;
+
+static void write_bytes_in_null_terminated_bytes(Null_Terminated_Bytes_Source* source, Byte* bytes, Number number_of_bytes)
+{
+	if(source->max_size < number_of_bytes)
+	{
+		//log_error("s", "Превышено количество байт");
+		return;
+	}
+
+	while(number_of_bytes)
+	{
+		*source->bytes = *bytes;
+		++source->bytes;
+		++bytes;
+		--source->max_size;
+		--number_of_bytes;
+	}
+}
+
+static void print_in_null_terminated_bytes(Byte* bytes, Number max_size, Byte* parameters, ...)
+{
+	Writer                       writer;
+	Null_Terminated_Bytes_Source source;
+
+	source.bytes    = bytes;
+	source.max_size = max_size;
+
+	initialize_writer(&writer, &source, NULL_TERMINATED_BYTES_SOURCE);
+	print_in_writer(&writer, parameters, &parameters + 1);
+	write_Byte(&writer, '\0');
+	flush_writer(&writer);
+}
+
+
 void initialize_writer(Writer* writer, Byte* source, Integer_Number (*write_bytes)(Byte* source, Byte* bytes, Number size_of_bytes))
 {
 	writer->buffer_used  = 0;
@@ -33,23 +74,29 @@ void initialize_writer(Writer* writer, Byte* source, Integer_Number (*write_byte
 }
 
 
-void deinitialize_writer(Writer* writer)
-{
-	if(writer->buffer_used)
-		writer->write_bytes(writer->source, writer->buffer, writer->buffer_used);
-
-	if(writer->close_source)
-		writer->close_source(writer->source);
-}
+static void write_bytes_in_null_terminated_bytes(Null_Terminated_Bytes_Source* source, Byte* bytes, Number number_of_bytes);
 
 
 void flush_writer(Writer* writer)
 {
 	if(writer->buffer_used)
 	{
-		writer->write_bytes(writer->source, writer->buffer, writer->buffer_used);
+		if(writer->write_bytes == NULL_TERMINATED_BYTES_SOURCE)
+			write_bytes_in_null_terminated_bytes(writer->source, writer->buffer, writer->buffer_used);
+		else
+			writer->write_bytes(writer->source, writer->buffer, writer->buffer_used);
+
 		writer->buffer_used = 0;
 	}
+}
+
+void deinitialize_writer(Writer* writer)
+{
+	if(writer->buffer_used)
+		flush_writer(writer);
+
+	if(writer->close_source)
+		writer->close_source(writer->source);
 }
 
 
@@ -336,44 +383,4 @@ static void print_in_writer(Writer* writer, Byte* parameters, Byte** arguments)
 			write_Byte(writer, parameter);
 		}
 	}
-}
-
-
-typedef struct
-{
-	Byte* bytes;
-	Number max_size;
-}
-Null_Terminated_Bytes_Source;
-
-static void write_bytes_in_null_terminated_bytes(Null_Terminated_Bytes_Source* source, Byte* bytes, Number number_of_bytes)
-{
-	if(source->max_size < number_of_bytes)
-	{
-		//log_error("s", "Превышено количество байт");
-		return;
-	}
-
-	while(number_of_bytes)
-	{
-		*source->bytes = *bytes;
-		++source->bytes;
-		++bytes;
-		--source->max_size;
-		--number_of_bytes;
-	}
-}
-
-static void print_in_null_terminated_bytes(Byte* bytes, Number max_size, Byte* parameters, ...)
-{
-	Writer                       writer;
-	Null_Terminated_Bytes_Source source;
-
-	source.bytes    = bytes;
-	source.max_size = max_size;
-
-	initialize_writer(&writer, &source, &write_bytes_in_null_terminated_bytes);
-	print_in_writer(&writer, parameters, &parameters + 1);
-	write_Byte(&writer, '\0');
-	flush_writer(&writer);
 }

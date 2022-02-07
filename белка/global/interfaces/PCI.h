@@ -1,11 +1,3 @@
-#ifndef PCI_INCLUDED
-#define PCI_INCLUDED
-
-
-#include <types.c>
-#include <kernel.h>
-
-
 typedef struct
 {
 	Number16 ID;
@@ -115,23 +107,20 @@ PCI_Field;
 
 typedef struct
 {
-	Kernel* kernel;
+	Number              module_address;
+	struct PCI_Context* next;
 
-	Number32 (*read_from_PCI_device_config) (Kernel* kernel, PCI_Device* device, PCI_Field field_address);
-	void     (*write_in_PCI_device_config)  (Kernel* kernel, PCI_Device* device, PCI_Field field_address, Number32 data);
+	Number32 (*read_from_PCI_device_config) (PCI_Device* device, PCI_Field field_address);
+	void     (*write_in_PCI_device_config)  (PCI_Device* device, PCI_Field field_address, Number32 data);
+	Number32 (*get_PCI_MMIO_address)        (PCI_Device* device, Number BAR_number);
+	Number32 (*get_PCI_IO_address)          (PCI_Device* device, Number BAR_number);
 
-	Number32 (*get_PCI_MMIO_address) (PCI_Device* device, Number BAR_number);
-	Number32 (*get_PCI_IO_address)   (PCI_Device* device, Number BAR_number);
-
-	void (*print_PCI_device) (Kernel* kernel, PCI_Device* device);
+	//void (*print_PCI_device) (Kernel* kernel, PCI_Device* device);
 }
-PCI;
+PCI_Context;
 
 
-typedef void (*PCI_Driver)(PCI* pci, PCI_Device* device, Number module_address);
+typedef void (*PCI_Driver)(struct Kernel* kernel, Number module_address, PCI_Device* device);
 
 
-void find_PCI_devices(Kernel* kernel);
-
-
-#endif//PCI_INCLUDED
+//void find_PCI_devices(Kernel* kernel);

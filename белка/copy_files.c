@@ -39,7 +39,7 @@ Boolean append_FAT_files(File storage_file)
 	if(!open_FAT_File_System(&file_system, storage_file))
 		goto error;
 
-	if(!append_FAT_file(&file_system, "bin/components/kernel", L"KERNEL"))
+	if(!append_FAT_file(&file_system, "bin/components/main-loader", L"LOADER"))
 		goto error;
 
 	if(!create_FAT_directory(&file_system, L"IFACES"))
@@ -56,6 +56,9 @@ Boolean append_FAT_files(File storage_file)
 		goto error;
 
 	if(!append_FAT_file(&file_system, "bin/components/interfaces/display/out", L"DISPLAY"))
+		goto error;
+
+	if(!append_FAT_file(&file_system, "bin/components/interfaces/PCI/out", L"PCI"))
 		goto error;
 
 
@@ -76,6 +79,23 @@ Boolean append_FAT_files(File storage_file)
 
 
 	if(!append_FAT_file(&file_system, "bin/components/drivers/display/VGA/out", L"VGA"))
+		goto error;
+
+
+	if(!open_FAT_File_System(&file_system, storage_file))
+		goto error;
+
+	if(!open_FAT_directory(&file_system, L"DRIVERS"))
+		goto error;
+
+	if(!create_FAT_directory(&file_system, L"PCI"))
+		goto error;
+
+	if(!open_FAT_directory(&file_system, L"PCI"))
+		goto error;
+
+
+	if(!append_FAT_file(&file_system, "bin/components/drivers/PCI/106B003F/out", L"106B003F"))
 		goto error;
 
 
@@ -171,6 +191,12 @@ Number main()
 
 	File   storage_file;
 	Number storage_file_size;
+	File   ebr_bootcode_file;
+	Byte   ebr_bootcode[512];
+	Number ebr_bootcode_size;
+	File   fat32_bootcode_file;
+	Byte   fat32_bootcode[512];
+	Number fat32_bootcode_size;
 
 	storage_file = open_file("bin/storage");
 	if(!storage_file)
@@ -181,8 +207,49 @@ Number main()
 	storage_file_size = get_file_size(storage_file);
 	print("размер bin/storage: %d байт\n", storage_file_size);
 
-	create_partition(storage_file, storage_file_size);
-	format_FAT32(storage_file, storage_file_size);
+
+	ebr_bootcode_file = open_file("bin/components/EBR-loader");
+	
+	if(!ebr_bootcode_file)
+	{
+		log_error("отсутствует файл \"bin/components/EBR-loader\"");
+		return 1;
+	}
+
+	ebr_bootcode_size = get_file_size(ebr_bootcode_file);
+	
+	if(ebr_bootcode_size > 512 - 2)
+	{
+		log_error("размер \"bin/components/EBR-loader\" %d, больше допустимого", ebr_bootcode_size);
+		return 1;
+	}
+
+	read_bytes_from_file(ebr_bootcode_file, ebr_bootcode, ebr_bootcode_size);
+
+	create_partition(storage_file, storage_file_size, ebr_bootcode, ebr_bootcode_size);
+
+
+	fat32_bootcode_file = open_file("bin/components/FAT32-loader");
+	
+	if(!fat32_bootcode_file)
+	{
+		log_error("отсутствует файл \"bin/components/FAT32-loader\"");
+		return 1;
+	}
+
+	fat32_bootcode_size = get_file_size(fat32_bootcode_file);
+	
+	if(fat32_bootcode_size > 446)
+	{
+		log_error("размер \"bin/components/FAT32-loader\" %d, больше допустимого", fat32_bootcode_size);
+		return 1;
+	}
+
+	read_bytes_from_file(fat32_bootcode_file, fat32_bootcode, fat32_bootcode_size);
+
+
+	format_FAT32(storage_file, storage_file_size, fat32_bootcode, fat32_bootcode_size);
+
 	append_FAT_files(storage_file);
 
 	close_file(storage_file);

@@ -222,5 +222,4 @@ read_error:
 	int 19h
 
 init_name:
-	;db "GBPLF      "
 	db "LOADER     "

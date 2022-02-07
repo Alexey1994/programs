@@ -9,10 +9,26 @@ static Number32 write_bytes_in_console(Console_Context* console, Byte* bytes, Nu
 
 void start_module(Kernel* kernel, Number module_address)
 {
-	Console_Context* console;
-	Writer_Context*  writer;
+	Console_Context** last_console_address;
+	Console_Context*  last_console;
+	Console_Context*  console;
+	Writer_Context*   writer;
 
-	console = kernel->console = kernel->allocate_global_memory(sizeof(Console_Context));
+	last_console_address = &kernel->console;
+	for(;;)
+	{
+		last_console = *last_console_address;
+
+		if(!last_console)
+			break;
+
+		last_console_address = &last_console->next;
+	}
+	//while(*last_console_address)
+	//	last_console_address = &(*last_console_address)->next;
+
+	console = *last_console_address = kernel->allocate_global_memory(sizeof(Console_Context));
+	console->next = 0;
 	writer  = kernel->writer;
 
 	console->module_address = module_address;
